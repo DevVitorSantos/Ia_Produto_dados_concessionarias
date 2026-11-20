@@ -54,13 +54,47 @@ def _as_int(value: object, default: int) -> int:
         return default
 
 
+def _parse_credentials(value: object, label: str) -> Mapping[str, object] | None:
+    if isinstance(value, Mapping):
+        return dict(value)
+    if not isinstance(value, str):
+        return None
+
+    text = value.strip()
+    if not text.startswith("{"):
+        return None
+
+    try:
+        parsed = json.loads(text)
+    except ValueError:
+        raise ValueError(f"{label} não contém um JSON válido.") from None
+    if not isinstance(parsed, Mapping):
+        raise ValueError(f"{label} não contém um objeto JSON válido.")
+    return dict(parsed)
+
+
+def _normalize_credentials_path(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    if not text or text.startswith("{") or "caminho/para" in text.lower():
+        return None
+    return text if os.path.isfile(text) else None
+
+
 def load_settings() -> Settings:
-    raw_credentials = get_secret("GOOGLE_APPLICATION_CREDENTIALS_JSON")
-    credentials_info: Mapping[str, object] | None = None
-    if isinstance(raw_credentials, str) and raw_credentials.strip():
-        credentials_info = json.loads(raw_credentials)
-    elif isinstance(raw_credentials, Mapping):
-        credentials_info = dict(raw_credentials)
+    raw_credentials = get_secret("GOOGLE_APPLICATION_CREDENTIALS_JSON") or os.getenv(
+        "GOOGLE_APPLICATION_CREDENTIALS_JSON"
+    )
+    credentials_info = _parse_credentials(raw_credentials, "GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if credentials_info is None:
+        raw_fallback = get_secret("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv(
+            "GOOGLE_APPLICATION_CREDENTIALS"
+        )
+        credentials_info = _parse_credentials(raw_fallback, "GOOGLE_APPLICATION_CREDENTIALS")
+    credentials_path = None if credentials_info else _normalize_credentials_path(
+        os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    )
 
     return Settings(
         project_id=str(get_secret("GCP_PROJECT_ID") or os.getenv("GCP_PROJECT_ID") or DEFAULT_PROJECT_ID),
@@ -79,5 +113,5 @@ def load_settings() -> Settings:
             DEFAULT_MAX_ROWS,
         ),
         credentials_info=credentials_info,
-        credentials_path=os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+        credentials_path=credentials_path,
     )

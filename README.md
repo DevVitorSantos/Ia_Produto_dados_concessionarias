@@ -21,7 +21,7 @@ python -m venv .venv
 
 ## Configuração
 
-Localmente, aponte a credencial da conta de serviço:
+Localmente, aponte a credencial da conta de serviço. No Streamlit Cloud, não use caminho de arquivo; use `GOOGLE_APPLICATION_CREDENTIALS_JSON` nos Secrets com o conteúdo integral do JSON:
 
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="caminho/para/service-account.json"
