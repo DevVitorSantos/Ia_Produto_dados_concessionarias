@@ -1,0 +1,152 @@
+version: 1
+source: bigquery
+project_id: projeto-dev-410722
+dataset: gold_clau
+location: US
+primary_table: vw_fato_completa
+tables:
+  vw_fato_completa:
+    type: view
+    grain: uma linha por venda
+    primary_key: id_venda
+    columns:
+      id_venda:
+        type: INTEGER
+        description: Identificador único da venda.
+      id_cliente:
+        type: INTEGER
+        description: Identificador do cliente na dimensão.
+      id_veiculo:
+        type: INTEGER
+        description: Identificador do modelo de veículo.
+      id_vendedor:
+        type: INTEGER
+        description: Identificador do vendedor.
+      id_concessionaria:
+        type: INTEGER
+        description: Identificador da concessionária.
+      id_tempo:
+        type: DATE
+        description: Data da venda usada na junção com dim_tempo.
+      valor_pago:
+        type: NUMERIC
+        description: Valor efetivamente pago pela venda, em reais.
+      valor_desconto:
+        type: NUMERIC
+        description: valor_tabela menos valor_pago, com sinal.
+      percentual_desconto:
+        type: NUMERIC
+        description: valor_desconto dividido por valor_tabela, em fração com sinal.
+      ticket_medio:
+        type: NUMERIC
+        description: Igual a valor_pago porque quantidade_venda é sempre 1.
+      quantidade_venda:
+        type: INTEGER
+        description: Quantidade de itens da venda; sempre 1 na base atual.
+      faixa_preco:
+        type: STRING
+        description: Faixa de valor pago.
+      venda_com_desconto:
+        type: INTEGER
+        description: 1 quando valor_pago é menor que valor_tabela; 0 caso contrário.
+      categoria_desconto:
+        type: STRING
+        description: Categoria do percentual de desconto.
+      data:
+        type: DATE
+        description: Data da venda.
+      ano:
+        type: INTEGER
+        description: Ano da data da venda.
+      semestre:
+        type: INTEGER
+        description: Semestre da data da venda.
+      trimestre:
+        type: INTEGER
+        description: Trimestre da data da venda.
+      mes:
+        type: INTEGER
+        description: Mês da data da venda.
+      nome_mes:
+        type: STRING
+        description: Nome do mês em português.
+      ano_mes:
+        type: DATE
+        description: Primeiro dia do mês da venda.
+      ano_mes_texto:
+        type: STRING
+        description: Mês e ano formatados para apresentação.
+      semana:
+        type: INTEGER
+        description: Semana do ano da data da venda.
+      dia:
+        type: INTEGER
+        description: Dia do mês da data da venda.
+      numero_dia_semana:
+        type: INTEGER
+        description: Número do dia da semana.
+      nome_dia_semana:
+        type: STRING
+        description: Nome do dia da semana.
+      fim_de_semana:
+        type: BOOLEAN
+        description: Indica se a data é sábado ou domingo.
+      dia_util:
+        type: BOOLEAN
+        description: Indica se a data é dia útil.
+      cliente:
+        type: STRING
+        description: "Nome do cliente ou rótulo sintético Cliente #id quando não há match."
+      endereco:
+        type: STRING
+        description: Endereço do cliente.
+      modelo:
+        type: STRING
+        description: Modelo do veículo vendido.
+      tipo:
+        type: STRING
+        description: Tipo do veículo vendido.
+      valor_tabela:
+        type: NUMERIC
+        description: Valor de tabela do veículo, em reais.
+      vendedor:
+        type: STRING
+        description: Nome do vendedor.
+      concessionaria:
+        type: STRING
+        description: Nome da concessionária.
+      cidade:
+        type: STRING
+        description: Cidade da concessionária.
+      estado:
+        type: STRING
+        description: Estado da concessionária.
+      uf:
+        type: STRING
+        description: Sigla da unidade federativa da concessionária.
+relationships:
+  - from_column: id_tempo
+    to_table: dim_tempo
+    to_column: id_tempo
+    join_type: LEFT JOIN
+  - from_column: id_cliente
+    to_table: dim_cliente
+    to_column: id_cliente
+    join_type: LEFT JOIN
+  - from_column: id_veiculo
+    to_table: dim_veiculo
+    to_column: id_veiculo
+    join_type: LEFT JOIN
+  - from_column: id_vendedor
+    to_table: dim_vendedor
+    to_column: id_vendedor
+    join_type: LEFT JOIN
+  - from_column: id_concessionaria
+    to_table: dim_concessionaria
+    to_column: id_concessionaria
+    join_type: LEFT JOIN
+validation:
+  expected_columns: 38
+  expected_objects: 7
+  duplicate_sales: 0
+  max_data_date: 2026-07-02

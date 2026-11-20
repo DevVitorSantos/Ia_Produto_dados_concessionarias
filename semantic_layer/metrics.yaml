@@ -1,0 +1,87 @@
+version: 1
+default_table: vw_fato_completa
+metrics:
+  faturamento_total:
+    label: Faturamento total
+    description: Soma dos valores efetivamente pagos nas vendas.
+    column: valor_pago
+    sql: SUM(valor_pago)
+    aggregation: SUM
+    unit: BRL
+    format: currency_br
+    question_examples:
+      - Qual foi o faturamento total?
+      - Quanto vendemos no último mês?
+  quantidade_vendas:
+    label: Quantidade de vendas
+    description: Contagem de vendas distintas.
+    column: id_venda
+    sql: COUNT(DISTINCT id_venda)
+    aggregation: COUNT_DISTINCT
+    unit: unidade
+    format: integer_br
+    question_examples:
+      - Quantas vendas foram realizadas?
+  ticket_medio:
+    label: Ticket médio
+    description: Faturamento dividido pela quantidade de vendas.
+    column: valor_pago
+    sql: SUM(valor_pago) / NULLIF(COUNT(DISTINCT id_venda), 0)
+    aggregation: RATIO
+    unit: BRL
+    format: currency_br
+    notes: Não usar AVG(ticket_medio); o campo ticket_medio da view é igual a valor_pago da linha.
+  desconto_total:
+    label: Desconto total
+    description: Soma de valor_desconto, com sinal.
+    column: valor_desconto
+    sql: SUM(valor_desconto)
+    aggregation: SUM
+    unit: BRL
+    format: currency_br
+    notes: Valor negativo indica vendas acima da tabela.
+  desconto_medio:
+    label: Desconto médio por venda
+    description: Soma de valor_desconto dividida pela quantidade de vendas, com sinal.
+    column: valor_desconto
+    sql: SUM(valor_desconto) / NULLIF(COUNT(DISTINCT id_venda), 0)
+    aggregation: RATIO
+    unit: BRL
+    format: currency_br
+    notes: Pode ser negativo; sempre explicar o sinal na resposta.
+  percentual_desconto_medio:
+    label: Percentual médio de desconto
+    description: Desconto total dividido pelo valor total de tabela, ponderado pelo valor de tabela.
+    column: valor_desconto
+    sql: SUM(valor_desconto) / NULLIF(SUM(valor_tabela), 0)
+    aggregation: WEIGHTED_RATIO
+    unit: fraction
+    output_scale: fraction
+    format: percent_br
+    notes: Multiplicar por 100 apenas na formatação. Negativo significa acréscimo sobre a tabela.
+  percentual_desconto_simples:
+    label: Média simples do percentual de desconto
+    description: Média da coluna percentual_desconto, com sinal e sem arredondamento.
+    column: percentual_desconto
+    sql: AVG(percentual_desconto)
+    aggregation: AVG
+    unit: fraction
+    output_scale: fraction
+    format: percent_br
+    notes: Usar somente se o usuário pedir explicitamente média simples por venda.
+  veiculos_vendidos:
+    label: Veículos vendidos
+    description: Quantidade de veículos vendidos; equivale à quantidade de vendas na base atual.
+    column: id_venda
+    sql: COUNT(id_venda)
+    aggregation: COUNT
+    unit: unidade
+    format: integer_br
+  valor_tabela_total:
+    label: Valor de tabela total
+    description: Soma do valor de tabela dos veículos vendidos.
+    column: valor_tabela
+    sql: SUM(valor_tabela)
+    aggregation: SUM
+    unit: BRL
+    format: currency_br

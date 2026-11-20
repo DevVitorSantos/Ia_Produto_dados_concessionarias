@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fase 1 — Análise do projeto original | AI Analytics Assistant</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #5b6472;
+    --line: #d7dce3;
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --blue: #1967d2;
+    --blue-soft: #e8f0fe;
+    --green: #1e7e45;
+    --green-soft: #e6f4ea;
+    --amber: #8a5a00;
+    --amber-soft: #fff4d6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", Inter, system-ui, -apple-system, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 64px; }
+  header {
+    background: linear-gradient(135deg, #123a75, #1967d2);
+    color: #fff;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.75rem; }
+  header p { margin: 0; opacity: .92; }
+  .meta { margin-top: 16px; font-size: .85rem; opacity: .85; }
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  h2 { margin: 0 0 16px; font-size: 1.25rem; color: #123a75; }
+  h3 { margin: 22px 0 8px; font-size: 1.05rem; }
+  h3:first-of-type { margin-top: 0; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: .9em; background: #f1f3f5; padding: 1px 5px; border-radius: 4px; }
+  pre {
+    background: #17202c;
+    color: #e8eef7;
+    padding: 14px 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: .85rem;
+    line-height: 1.5;
+  }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f4fa; }
+  .pill { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .78rem; font-weight: 600; margin: 2px 4px 2px 0; }
+  .ok { background: var(--green-soft); color: var(--green); }
+  .pending { background: var(--amber-soft); color: var(--amber); }
+  .info { background: var(--blue-soft); color: var(--blue); }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { display: flex; gap: 10px; align-items: flex-start; }
+  .checklist input { margin-top: 5px; }
+  .note {
+    border-left: 4px solid var(--blue);
+    background: var(--blue-soft);
+    padding: 12px 16px;
+    border-radius: 0 10px 10px 0;
+    margin: 14px 0;
+  }
+  .warn { border-left-color: var(--amber); background: var(--amber-soft); }
+  .step { border-top: 1px dashed var(--line); padding-top: 18px; margin-top: 22px; }
+  .step:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+  .step-number { color: var(--blue); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 12px; }
+  @media print {
+    body { background: #fff; }
+    section { break-inside: avoid; box-shadow: none; }
+    header { background: #123a75 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Fase 1 — Análise do projeto original</h1>
+  <p>AI Analytics Assistant — Concessionárias · Roteiro passo a passo para documentar a fonte de dados antes de escrever qualquer código do assistente.</p>
+  <div class="meta">
+    Repositório analisado: github.com/DevVitorSantos/Produto_dados_concessionarias (público, branch <code>main</code>, commit <code>e978e449829a05bb2f6a7e1940c3d7e40cc43d0e</code>)<br>
+    BigQuery: projeto <code>projeto-dev-410722</code> · dataset <code>gold_clau</code> · localização <code>US</code><br>
+    Entregável da fase: documentação técnica da fonte de dados (schema real da camada Gold + regras de negócio extraídas do Dataform).
+  </div>
+</header>
+
+<section>
+  <h2>1. O que já foi feito e o que falta</h2>
+  <p>
+    <span class="pill ok">Repo acessível e clonado</span>
+    <span class="pill ok">README e requisitos lidos</span>
+    <span class="pill ok">7 arquivos .sqlx da Gold lidos</span>
+    <span class="pill ok">Regras da Silver mapeadas</span>
+    <span class="pill ok">Projeto/dataset/locação informados</span>
+    <span class="pill ok">7 objetos e 38 colunas confirmados no BigQuery</span>
+    <span class="pill ok">Permissão de consulta concedida</span>
+    <span class="pill ok">Validação com dados reais concluída</span>
+    <span class="pill pending">Divergência repo x produção a decidir</span>
+  </p>
+  <div class="note">
+    A permissão foi concedida e todas as consultas rodaram. <strong>A Gold em produção não é idêntica ao código do GitHub</strong>: rótulos, limiares e fórmulas de desconto mudaram. A fonte oficial para a camada semântica deve ser o BigQuery, não o repositório.
+  </div>
+</section>
+
+<section>
+  <h2>1.1 Validação realizada no BigQuery</h2>
+  <p>Arquivo de credenciais usado: <code>projeto-dev-410722-d07b00c2fe6d.json</code> (na pasta do projeto; o conteúdo não foi exibido e não deve ser versionado).</p>
+
+  <h3>Estrutura confirmada</h3>
+  <ul>
+    <li>Projeto <code>projeto-dev-410722</code>, dataset <code>gold_clau</code>, localização <code>US</code>.</li>
+    <li>7 objetos presentes: <code>dim_cliente</code>, <code>dim_concessionaria</code>, <code>dim_tempo</code>, <code>dim_veiculo</code>, <code>dim_vendedor</code>, <code>fato_vendas</code> (BASE TABLE) e <code>vw_fato_completa</code> (VIEW).</li>
+    <li><code>vw_fato_completa</code> tem 38 colunas, com tipos coerentes: NUMERIC para valores monetários, DATE para <code>data</code>, <code>id_tempo</code> e <code>ano_mes</code>, STRING para rótulos.</li>
+    <li>A SQL real da view foi lida via BigQuery API. Ela repete os 5 LEFT JOINs do repositório, mas troca <code>c.cliente</code> por <code>COALESCE(c.cliente, CONCAT('Cliente #', f.id_cliente))</code>.</li>
+  </ul>
+
+  <h3>Volume, período e integridade</h3>
+  <table>
+    <thead><tr><th>Verificação</th><th>Resultado</th></tr></thead>
+    <tbody>
+      <tr><td>Linhas da view / vendas distintas</td><td>7.720 / 7.720 — sem duplicação</td></tr>
+      <tr><td>Chaves de dimensão únicas</td><td>dim_tempo 6.939, dim_cliente 1.236, dim_veiculo 8, dim_vendedor 53, dim_concessionaria 29 — todas sem duplicidade</td></tr>
+      <tr><td>Período das vendas</td><td>01/01/2025 a 02/07/2026 — dados de 2026 terminam em julho</td></tr>
+      <tr><td>2025</td><td>4.090 vendas · R$ 2.029.298.597,07</td></tr>
+      <tr><td>2026</td><td>3.630 vendas · R$ 1.414.859.042,62</td></tr>
+      <tr><td>Total</td><td>7.720 vendas · R$ 3.444.157.639,69</td></tr>
+      <tr><td>Dimensão tempo</td><td>2017-01-01 a 2035-12-31 (6.939 dias), diferente do intervalo 2020-2030 descrito no repo</td></tr>
+      <tr><td>Vendedores / concessionárias / modelos</td><td>53 / 29 / 8 valores distintos</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Comportamento real das medidas na Gold de produção</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Comportamento observado</th><th>Consequência para o assistente</th></tr></thead>
+    <tbody>
+      <tr><td><code>quantidade_venda</code></td><td>Sempre 1 nas 7.720 linhas</td><td>Não usar como "quantidade de veículos" independente; uma linha equivale a uma venda</td></tr>
+      <tr><td><code>ticket_medio</code></td><td>Igual a <code>valor_pago</code> em 100% das linhas</td><td>Ticket médio de negócio deve ser <code>SUM(valor_pago) / COUNT(id_venda)</code>, não média desse campo isolado</td></tr>
+      <tr><td><code>valor_desconto</code></td><td><code>valor_tabela - valor_pago</code>, com sinal: 3.927 positivos e 3.793 negativos (valor pago acima da tabela). Mínimo -540.640,97; máximo 561.436,09</td><td>Desconto médio simples pode ser negativo; explicar que negativo significa acréscimo sobre a tabela</td></tr>
+      <tr><td><code>percentual_desconto</code></td><td>Fração não arredondada: <code>(valor_tabela - valor_pago) / valor_tabela</code>. Exemplo real: 32.468 / 280.000 = 0,115957143 (11,60%). Faixa: -2,1626 a 0,7018</td><td>Escala é 0 a 1, não 0 a 100. Multiplicar por 100 apenas na formatação da resposta</td></tr>
+      <tr><td><code>venda_com_desconto</code></td><td>1 quando <code>valor_tabela &gt; valor_pago</code> (3.927 linhas), 0 caso contrário (3.793) — 100% coerente</td><td>Confiável para filtrar vendas com desconto</td></tr>
+      <tr><td><code>categoria_desconto</code></td><td><strong>Baixo</strong> (até ~5%, 5.695 linhas), <strong>Médio</strong> (5% a 10%, 257), <strong>Alto</strong> (acima de 10%, 1.768)</td><td>Rótulos e limiares diferentes do repositório (que usava "Sem Desconto/Leve/Moderado/Agressivo")</td></tr>
+      <tr><td><code>faixa_preco</code></td><td><strong>Até 250 mil</strong> (1.530), <strong>250k a 350k</strong> (1.606), <strong>350k a 500k</strong> (1.753), <strong>Acima de 500k</strong> (2.831)</td><td>Limiares e rótulos diferentes do repositório (Popular/Padrão/Alto Padrão/Premium)</td></tr>
+      <tr><td><code>cliente</code></td><td>6.484 de 7.720 vendas (84%) não encontram registro em <code>dim_cliente</code> e recebem rótulo sintético <code>Cliente #&lt;id&gt;</code></td><td>"Clientes atendidos" e rankings de clientes ficam distorcidos; sinalizar limitação em vez de apresentar como dado confiável</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Divergências em relação ao repositório GitHub</h3>
+  <ul>
+    <li><code>valor_desconto</code> e <code>percentual_desconto</code>: no repo há <code>GREATEST(..., 0)</code> e multiplicação por 100; na produção não há clamp e a escala é fracionária.</li>
+    <li><code>categoria_desconto</code> e <code>faixa_preco</code>: rótulos e intervalos diferentes.</li>
+    <li><code>vw_fato_completa</code>: na produção há <code>COALESCE</code> para cliente, ausente no <code>.sqlx</code>.</li>
+    <li><code>dim_tempo</code>: intervalo 2017-2035 na produção contra 2020-2030 no repo.</li>
+    <li><code>fato_vendas</code> é uma tabela base, não uma view; não é possível ler a SQL de origem pelo BigQuery — as fórmulas acima foram inferidas dos valores e da SQL da view.</li>
+  </ul>
+  <div class="note warn">
+    Decisão necessária antes da Fase 3: usar os valores e rótulos da <strong>produção (BigQuery)</strong> como fonte da camada semântica. O repositório continua servindo como contexto histórico, mas não como definição de métricas.
+  </div>
+</section>
+
+<section>
+  <h2>2. Objetivo e limites da Fase 1</h2>
+  <ul>
+    <li><strong>Objetivo:</strong> entender a estrutura real da camada Gold e produzir a documentação técnica que servirá de base para os arquivos <code>schema.yaml</code>, <code>metrics.yaml</code>, <code>dimensions.yaml</code> e <code>business_rules.yaml</code>.</li>
+    <li><strong>Principal fonte de consulta futura:</strong> <code>gold.vw_fato_completa</code> (view com os 5 JOINs já resolvidos) e, quando necessário, <code>gold.fato_vendas</code> + dimensões.</li>
+    <li><strong>Não fazer:</strong> consultar Bronze ou Silver no assistente; alterar o projeto original; criar tabelas, views ou qualquer objeto no BigQuery; escrever o chatbot nesta fase.</li>
+    <li><strong>Regra de ouro:</strong> se uma informação não estiver no repositório nem no BigQuery, documentar a ausência e pedir a informação — nunca inventar.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>3. Passo a passo</h2>
+
+  <div class="step">
+    <div class="step-number">Passo 1 · Confirmar acesso e fixar a versão analisada</div>
+    <p>Garantir que o repositório público está acessível e registrar o commit exato usado como referência, para que a documentação seja reprodutível.</p>
+    <pre><code>git ls-remote https://github.com/DevVitorSantos/Produto_dados_concessionarias HEAD
+
+git clone --depth 1 https://github.com/DevVitorSantos/Produto_dados_concessionarias.git repo_fase1
+git -C repo_fase1 rev-parse HEAD</code></pre>
+    <ul class="checklist">
+      <li><input type="checkbox"> Repo clonado sem erro</li>
+      <li><input type="checkbox"> Commit <code>e978e44</code> anotado na documentação</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 2 · Mapear a estrutura de diretórios</div>
+    <p>Confirmar onde vivem as definições de dados e os documentos de apoio.</p>
+    <pre><code>repo_fase1/
+├── definitions/
+│   ├── silver/   7 arquivos .sqlx
+│   └── gold/     6 tabelas + 1 view (.sqlx)
+├── docs/         wireframes, guia de dashboards, guia de apresentação
+├── img/          imagens dos 5 dashboards e da arquitetura
+├── README.md
+└── projeto_nova_drive_modelagem_BG.txt</code></pre>
+    <ul class="checklist">
+      <li><input type="checkbox"> Estrutura conferida com o README</li>
+      <li><input type="checkbox"> Nenhum arquivo do repo original foi modificado</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 3 · Ler o contexto de negócio</div>
+    <p>Extrair as perguntas da diretoria e as métricas que o projeto original se propôs a responder.</p>
+    <ul>
+      <li><code>README.md</code>: 6 perguntas de negócio, 5 dashboards, stack (GCP, BigQuery, Dataform, Looker Studio).</li>
+      <li><code>projeto_nova_drive_modelagem_BG.txt</code>: lista de métricas por dashboard e o schema bruto da camada Bronze.</li>
+      <li><code>docs/guia_implementacao_dashboards.md</code>: fórmulas usadas nos scorecards dos dashboards — é a melhor fonte para as regras de negócio do assistente.</li>
+    </ul>
+    <ul class="checklist">
+      <li><input type="checkbox"> 6 perguntas de negócio registradas</li>
+      <li><input type="checkbox"> Fórmulas dos scorecards registradas</li>
+      <li><input type="checkbox"> Diferenças entre "métrica pedida" e "campo existente" anotadas</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 4 · documentar o schema real da Gold</div>
+    <p>Ler os 7 arquivos <code>definitions/gold/*.sqlx</code> e transcrever colunas, tipos e chaves. O resultado já obtido está na seção 4 deste documento.</p>
+    <pre><code>for f in repo_fase1/definitions/gold/*.sqlx; do
+  echo "=== $f ==="
+  cat "$f"
+done</code></pre>
+    <ul class="checklist">
+      <li><input type="checkbox"> 5 dimensões, 1 fato e 1 view catalogados</li>
+      <li><input type="checkbox"> Chaves estrangeiras confirmadas no SQL da view</li>
+      <li><input type="checkbox"> Tipos de dados confirmados no BigQuery (Information Schema)</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 5 · Rastrear a origem das métricas na Silver</div>
+    <p>Entender como cada medida da Gold foi calculada, sem copiar já a lógica para o assistente.</p>
+    <ul>
+      <li><code>silver/fato_vendas.sqlx</code>: cast de <code>valor_pago</code> para NUMERIC e de <code>data_venda</code> para DATE.</li>
+      <li><code>silver/fato_vendas_enriquecida.sqlx</code>: desconto, percentual, faixa de preço, categoria de desconto, <code>quantidade_venda = 1</code> e <code>ticket</code>.</li>
+      <li><code>silver/dim_calendario.sqlx</code>: calendário 2020 a 2030, <code>ano_mes</code> como DATE e <code>ano_mes_texto</code> como string <code>AAAA-MM</code>.</li>
+    </ul>
+    <ul class="checklist">
+      <li><input type="checkbox"> Fórmula de cada medida da Gold rastreada até a Silver</li>
+      <li><input type="checkbox"> Classificações (faixa e categoria) registradas com seus limites</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 6 · Validar no BigQuery (depende de você)</div>
+    <p>Com o <code>PROJECT_ID</code> e o dataset Gold em mãos, confirmar que os objetos existem, que os tipos batem com o código e que a view não duplica registros.</p>
+    <p>Já executadas com sucesso as consultas de metadados; as de dados seguem bloqueadas até a concessão do papel de Job User:</p>
+    <pre><code>SELECT table_name, table_type
+FROM `projeto-dev-410722.INFORMATION_SCHEMA.TABLES`
+WHERE table_schema = 'gold_clau'
+ORDER BY table_name;
+
+SELECT column_name, data_type
+FROM `projeto-dev-410722.INFORMATION_SCHEMA.COLUMNS`
+WHERE table_schema = 'gold_clau' AND table_name = 'vw_fato_completa'
+ORDER BY ordinal_position;
+
+SELECT
+  COUNT(*) AS linhas,
+  COUNT(DISTINCT id_venda) AS vendas_distintas,
+  MIN(data) AS primeira_data,
+  MAX(data) AS ultima_data,
+  MIN(valor_pago) AS menor_valor,
+  MAX(valor_pago) AS maior_valor,
+  MIN(percentual_desconto) AS min_desconto,
+  MAX(percentual_desconto) AS max_desconto
+FROM `projeto-dev-410722.gold_clau.vw_fato_completa`;
+
+SELECT 'dim_tempo' AS dim, COUNT(*) AS total, COUNT(DISTINCT id_tempo) AS chaves FROM `projeto-dev-410722.gold_clau.dim_tempo`
+UNION ALL SELECT 'dim_cliente', COUNT(*), COUNT(DISTINCT id_cliente) FROM `projeto-dev-410722.gold_clau.dim_cliente`
+UNION ALL SELECT 'dim_veiculo', COUNT(*), COUNT(DISTINCT id_veiculo) FROM `projeto-dev-410722.gold_clau.dim_veiculo`
+UNION ALL SELECT 'dim_vendedor', COUNT(*), COUNT(DISTINCT id_vendedor) FROM `projeto-dev-410722.gold_clau.dim_vendedor`
+UNION ALL SELECT 'dim_concessionaria', COUNT(*), COUNT(DISTINCT id_concessionaria) FROM `projeto-dev-410722.gold_clau.dim_concessionaria`;</code></pre>
+    <div class="note">
+      Todas as consultas foram executadas com sucesso após a concessão de <code>roles/bigquery.jobUser</code>. Resultados completos na seção 1.1.
+    </div>
+    <ul class="checklist">
+      <li><input type="checkbox" checked> Project ID e dataset Gold confirmados</li>
+      <li><input type="checkbox" checked> 7 objetos Gold encontrados no BigQuery</li>
+      <li><input type="checkbox" checked> Colunas e tipos conferidos com os .sqlx</li>
+      <li><input type="checkbox" checked> Concedido <code>roles/bigquery.jobUser</code> no projeto e <code>roles/bigquery.dataViewer</code> no dataset</li>
+      <li><input type="checkbox" checked> Unicidade das chaves de dimensão confirmada</li>
+      <li><input type="checkbox" checked> Período real dos dados (mín/máx data) registrado</li>
+      <li><input type="checkbox" checked> Escala e sinal de <code>percentual_desconto</code> conferidos — fração de -2,1626 a 0,7018</li>
+      <li><input type="checkbox" checked> SQL real da view lida via BigQuery API</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 7 · Escrever a documentação técnica da fonte</div>
+    <p>Consolidar tudo em um documento (por exemplo <code>docs/fase1_documentacao_fonte_dados.md</code>) com, no mínimo:</p>
+    <ul>
+      <li>identificação do projeto GCP, dataset Gold e localização;</li>
+      <li>lista de tabelas/views com descrição e granularidade;</li>
+      <li>dicionário de colunas da view <code>vw_fato_completa</code>;</li>
+      <li>modelo estrela e relacionamentos;</li>
+      <li>fórmulas e regras de negócio extraídas do Dataform e do guia de dashboards;</li>
+      <li>limitações descobertas e itens que dependem de confirmação;</li>
+      <li>data e commit do repositório usado como referência.</li>
+    </ul>
+    <ul class="checklist">
+      <li><input type="checkbox"> Documento criado e revisado</li>
+      <li><input type="checkbox"> Nenhum número de exemplo inventado nos resultados</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 8 · Declarar pendências e pedir o que falta</div>
+    <p>Registrar explicitamente o que não pôde ser verificado. As pendências atuais estão na seção 6 deste HTML.</p>
+    <ul class="checklist">
+      <li><input type="checkbox"> Pendências enviadas ao usuário</li>
+      <li><input type="checkbox"> Respostas recebidas e documentadas</li>
+    </ul>
+  </div>
+
+  <div class="step">
+    <div class="step-number">Passo 9 · Aceite e transição para a Fase 2</div>
+    <p>Só avançar quando os critérios da seção 7 estiverem marcados. A Fase 2 implementa autenticação e conexão com o BigQuery e entrega uma aplicação capaz de consultar os dados reais.</p>
+  </div>
+</section>
+
+<section>
+  <h2>4. Descobertas no repositório (contexto histórico)</h2>
+  <p>Os itens abaixo vêm dos arquivos do GitHub. Sempre que divergirem da seção 1.1, <strong>prevalece o comportamento medido no BigQuery</strong>.</p>
+
+  <h3>Objetos da camada Gold</h3>
+  <table>
+    <thead><tr><th>Objeto</th><th>Tipo</th><th>Chave</th><th>Conteúdo</th></tr></thead>
+    <tbody>
+      <tr><td><code>gold.dim_tempo</code></td><td>tabela</td><td><code>id_tempo</code> (= data)</td><td>data, ano, semestre, trimestre, mes, nome_mes, ano_mes, ano_mes_texto, semana, dia, dia_ano, numero_dia_semana, nome_dia_semana, fim_de_semana, dia_util</td></tr>
+      <tr><td><code>gold.dim_cliente</code></td><td>tabela</td><td><code>id_cliente</code></td><td>cliente, endereco, id_concessionaria</td></tr>
+      <tr><td><code>gold.dim_veiculo</code></td><td>tabela</td><td><code>id_veiculo</code></td><td>modelo, tipo, valor_tabela</td></tr>
+      <tr><td><code>gold.dim_vendedor</code></td><td>tabela</td><td><code>id_vendedor</code></td><td>vendedor, id_concessionaria</td></tr>
+      <tr><td><code>gold.dim_concessionaria</code></td><td>tabela</td><td><code>id_concessionaria</code></td><td>concessionaria, cidade, estado, uf</td></tr>
+      <tr><td><code>gold.fato_vendas</code></td><td>tabela</td><td><code>id_venda</code></td><td>id_cliente, id_veiculo, id_vendedor, id_concessionaria, id_tempo, valor_pago, valor_desconto, percentual_desconto, ticket_medio, quantidade_venda, faixa_preco, venda_com_desconto, categoria_desconto</td></tr>
+      <tr><td><code>gold.vw_fato_completa</code></td><td>view</td><td>herda <code>id_venda</code></td><td>todas as colunas do fato + atributos de tempo, cliente, veículo, vendedor e concessionária</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Relacionamentos (confirmados no SQL da view)</h3>
+  <table>
+    <thead><tr><th>Fato</th><th>Dimensão</th><th>Junção</th></tr></thead>
+    <tbody>
+      <tr><td><code>fato_vendas.id_tempo</code></td><td><code>dim_tempo.id_tempo</code></td><td>LEFT JOIN</td></tr>
+      <tr><td><code>fato_vendas.id_cliente</code></td><td><code>dim_cliente.id_cliente</code></td><td>LEFT JOIN</td></tr>
+      <tr><td><code>fato_vendas.id_veiculo</code></td><td><code>dim_veiculo.id_veiculo</code></td><td>LEFT JOIN</td></tr>
+      <tr><td><code>fato_vendas.id_vendedor</code></td><td><code>dim_vendedor.id_vendedor</code></td><td>LEFT JOIN</td></tr>
+      <tr><td><code>fato_vendas.id_concessionaria</code></td><td><code>dim_concessionaria.id_concessionaria</code></td><td>LEFT JOIN</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Regras e fórmulas extraídas do projeto original</h3>
+  <table>
+    <thead><tr><th>Conceito</th><th>Definição encontrada</th><th>Origem</th></tr></thead>
+    <tbody>
+      <tr><td>Faturamento</td><td><code>SUM(valor_pago)</code></td><td>guia dos dashboards / README</td></tr>
+      <tr><td>Total de vendas</td><td><code>COUNT(id_venda)</code></td><td>guia dos dashboards</td></tr>
+      <tr><td>Ticket médio</td><td><code>SUM(valor_pago) / COUNT(id_venda)</code> nos dashboards; na Gold existe <code>ticket_medio = ROUND(valor_pago / NULLIF(quantidade_venda,0), 2)</code></td><td>guia + <code>gold/fato_vendas.sqlx</code></td></tr>
+      <tr><td>Valor do desconto</td><td><code>GREATEST(valor_tabela - valor_pago, 0)</code></td><td><code>fato_vendas_enriquecida.sqlx</code></td></tr>
+      <tr><td>Percentual de desconto</td><td><code>ROUND(SAFE_DIVIDE(GREATEST(valor_tabela - valor_pago, 0), valor_tabela) * 100, 2)</code> — escala 0 a 100</td><td><code>fato_vendas_enriquecida.sqlx</code></td></tr>
+      <tr><td>Categoria de desconto</td><td>Sem desconto / Leve (até 5%) / Moderado (até 10%) / Agressivo (acima de 10%)</td><td><code>fato_vendas_enriquecida.sqlx</code></td></tr>
+      <tr><td>Faixa de preço</td><td>Popular (&lt; 30 mil), Padrão (30 a 50 mil), Alto Padrão (50 a 100 mil), Premium (&gt;= 100 mil) — sobre <code>valor_pago</code></td><td><code>fato_vendas_enriquecida.sqlx</code></td></tr>
+      <tr><td>Venda com desconto</td><td><code>CASE WHEN valor_tabela &gt; valor_pago THEN 1 ELSE 0 END</code></td><td><code>fato_vendas_enriquecida.sqlx</code></td></tr>
+      <tr><td>Quantidade vendida</td><td><code>quantidade_venda = 1</code> fixo por linha da Silver</td><td><code>fato_vendas_enriquecida.sqlx</code></td></tr>
+      <tr><td>Semestre</td><td>1 para meses 1 a 6, 2 para meses 7 a 12</td><td><code>dim_calendario.sqlx</code> / <code>dim_tempo.sqlx</code></td></tr>
+      <tr><td>Agrupamento mensal</td><td><code>ano_mes</code> é DATE (primeiro dia do mês); <code>ano_mes_texto</code> é string <code>AAAA-MM</code></td><td><code>dim_calendario.sqlx</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Pontos de atenção para a camada semântica (já validados no BigQuery)</h3>
+  <ul>
+    <li><code>percentual_desconto</code> na produção é fração com sinal (0,1159 = 11,59%); multiplicar por 100 somente ao formatar. O valor do repositório (0 a 100, sem sinal) não se aplica.</li>
+    <li><code>valor_desconto</code> também tem sinal. O "desconto médio" deve ser explicado: valor negativo significa venda acima da tabela, não desconto.</li>
+    <li>Como <code>quantidade_venda</code> é sempre 1, <code>ticket_medio</code> equivale ao <code>valor_pago</code> da linha. O ticket médio de negócio é <code>SUM(valor_pago) / COUNT(id_venda)</code>.</li>
+    <li>As categorias reais são Baixo / Médio / Alto (limites em 5% e 10% da fração) e as faixas reais são Até 250 mil / 250k a 350k / 350k a 500k / Acima de 500k.</li>
+    <li>84% das vendas não têm cliente real em <code>dim_cliente</code>; a view preenche <code>Cliente #id</code>. Não apresentar contagem de clientes como dado confiável sem ressalva.</li>
+    <li><code>meta_mensal</code> (R$ 200 mil) e <code>meta_anual</code> (R$ 3 milhões) são parâmetros do Looker Studio, <strong>não colunas da Gold</strong>. O assistente não deve responder metas sem fonte de dados.</li>
+    <li><code>cliente_recorrente</code> e a classificação de performance (Destaque / Bom / Atenção) aparecem só no guia de dashboards; não existem prontos na Gold.</li>
+    <li><code>dim_cliente</code> e <code>dim_vendedor</code> também têm <code>id_concessionaria</code>. Evitar joins extras: a view já traz concessionaria, cidade, estado e uf.</li>
+    <li>O README cita "Nova Drive" como marca nos documentos; o diretório do README lista <code>docs/guia_looker_studio.md</code>, mas o arquivo presente é <code>docs/guia_implementacao_dashboards.md</code>.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>5. Cobertura das perguntas do assistente</h2>
+  <p>Comparação entre o que o prompt do MVP pede e o que o schema Gold permite responder:</p>
+  <table>
+    <thead><tr><th>Pergunta-alvo</th><th>Possível com a Gold?</th><th>Campo(s) usado(s)</th></tr></thead>
+    <tbody>
+      <tr><td>Faturamento total / evolução</td><td>Sim</td><td><code>valor_pago</code>, <code>data</code>, <code>ano_mes</code></td></tr>
+      <tr><td>Concessionárias que mais venderam</td><td>Sim</td><td><code>concessionaria</code>, <code>valor_pago</code>, <code>id_venda</code></td></tr>
+      <tr><td>Melhor vendedor</td><td>Sim</td><td><code>vendedor</code>, <code>valor_pago</code>, <code>id_venda</code></td></tr>
+      <tr><td>Ticket médio</td><td>Sim, calculando sobre a agregação</td><td><code>valor_pago</code>, <code>id_venda</code></td></tr>
+      <tr><td>Modelos mais vendidos</td><td>Sim</td><td><code>modelo</code>, <code>id_venda</code></td></tr>
+      <tr><td>Percentual médio de desconto</td><td>Sim, com conversão de fração para % e ressalva de sinal</td><td><code>percentual_desconto</code></td></tr>
+      <tr><td>Clientes atendidos / clientes mais valiosos</td><td>Parcial — 84% dos rótulos são sintéticos</td><td><code>cliente</code>, <code>id_cliente</code>, <code>valor_pago</code></td></tr>
+      <tr><td>Comparação por estado</td><td>Sim</td><td><code>estado</code>, <code>uf</code>, <code>valor_pago</code></td></tr>
+      <tr><td>Comparações temporais</td><td>Sim, se houver meses suficientes</td><td><code>data</code>, <code>ano</code>, <code>trimestre</code>, <code>ano_mes</code></td></tr>
+      <tr><td>Metas, forecast, clientes recorrentes</td><td>Não na Gold</td><td>sem campo disponível; sinalizar limitação</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>6. Decisões confirmadas</h2>
+  <ol>
+    <li><strong>Fonte oficial das métricas</strong> — confirmado: produção BigQuery (<code>gold_clau</code>). O repositório GitHub é contexto histórico.</li>
+    <li><strong>Dados de clientes</strong> — confirmado: as respostas devem sinalizar os 6.484 rótulos sintéticos <code>Cliente #id</code>.</li>
+    <li><strong>Formato do entregável</strong> — confirmado: HTML e Markdown. O Markdown está em <code>docs/fase1_documentacao_fonte_dados.md</code>.</li>
+    <li><strong>Versionamento do JSON</strong> — o <code>.gitignore</code> será criado na Fase 2, protegendo o arquivo <code>projeto-dev-410722-d07b00c2fe6d.json</code>.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>7. Critérios de conclusão da Fase 1</h2>
+  <ul class="checklist">
+    <li><input type="checkbox" checked> Repositório original analisado e commit registrado</li>
+    <li><input type="checkbox" checked> Projeto GCP e dataset Gold identificados</li>
+    <li><input type="checkbox" checked> 7 objetos Gold listados com tipos e colunas reais</li>
+    <li><input type="checkbox" checked> Relacionamentos e granularidade da fato documentados</li>
+    <li><input type="checkbox" checked> Métricas e regras de negócio extraídas do Dataform e do guia de dashboards</li>
+    <li><input type="checkbox" checked> Qualidade dos JOINs e escala do desconto validadas com dados reais</li>
+    <li><input type="checkbox" checked> Limitações e campos indisponíveis documentados</li>
+    <li><input type="checkbox" checked> Ausências que dependem de você formalmente solicitadas</li>
+  </ul>
+</section>
+
+<section>
+  <h2>8. Próxima etapa</h2>
+  <p><strong>Fase 2 — Conexão com BigQuery:</strong> implementar autenticação, conexão, validação de acesso ao Gold, consultas de teste e tratamento de erros. Entregável: aplicação capaz de consultar os dados reais. Etapa iniciada após a confirmação das decisões acima.</p>
+  <p>A ordem do prompt deve ser mantida: conectar ao BigQuery, consultar corretamente o Gold, criar a camada semântica, integrar OpenAI com Function Calling, construir o chatbot, criar visualizações e por fim preparar o deploy.</p>
+</section>
+
+<footer>Documento de apoio da Fase 1 · gerado a partir do prompt do MVP e do repositório original · nenhuma credencial incluída.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,163 @@
+version: 1
+default_table: vw_fato_completa
+dimensions:
+  data:
+    label: Data da venda
+    column: data
+    type: DATE
+    role: time
+    description: Data usada como referência para filtros e séries temporais.
+  ano:
+    label: Ano
+    column: ano
+    type: INTEGER
+    role: time
+  semestre:
+    label: Semestre
+    column: semestre
+    type: INTEGER
+    role: time
+  trimestre:
+    label: Trimestre
+    column: trimestre
+    type: INTEGER
+    role: time
+  mes:
+    label: Mês
+    column: mes
+    type: INTEGER
+    role: time
+  nome_mes:
+    label: Nome do mês
+    column: nome_mes
+    type: STRING
+    role: time
+  ano_mes:
+    label: Ano e mês
+    column: ano_mes
+    type: DATE
+    role: time
+    notes: Primeiro dia do mês; usar para agrupamentos mensais.
+  ano_mes_texto:
+    label: Ano e mês formatado
+    column: ano_mes_texto
+    type: STRING
+    role: time
+  dia:
+    label: Dia
+    column: dia
+    type: INTEGER
+    role: time
+  semana:
+    label: Semana do ano
+    column: semana
+    type: INTEGER
+    role: time
+  dia_util:
+    label: Dia útil
+    column: dia_util
+    type: BOOLEAN
+    role: time
+  fim_de_semana:
+    label: Fim de semana
+    column: fim_de_semana
+    type: BOOLEAN
+    role: time
+  cliente:
+    label: Cliente
+    column: cliente
+    type: STRING
+    role: entity
+    description: Nome do cliente ou rótulo sintético.
+    synthetic_pattern: "Cliente #"
+    disclosure: "Sempre informar quando o rótulo começar com Cliente #, pois não houve correspondência em dim_cliente."
+  id_cliente:
+    label: Identificador do cliente
+    column: id_cliente
+    type: INTEGER
+    role: entity
+  vendedor:
+    label: Vendedor
+    column: vendedor
+    type: STRING
+    role: entity
+  id_vendedor:
+    label: Identificador do vendedor
+    column: id_vendedor
+    type: INTEGER
+    role: entity
+  concessionaria:
+    label: Concessionária
+    column: concessionaria
+    type: STRING
+    role: entity
+  id_concessionaria:
+    label: Identificador da concessionária
+    column: id_concessionaria
+    type: INTEGER
+    role: entity
+  cidade:
+    label: Cidade
+    column: cidade
+    type: STRING
+    role: geography
+  estado:
+    label: Estado
+    column: estado
+    type: STRING
+    role: geography
+  uf:
+    label: UF
+    column: uf
+    type: STRING
+    role: geography
+  modelo:
+    label: Modelo do veículo
+    column: modelo
+    type: STRING
+    role: product
+  tipo:
+    label: Tipo do veículo
+    column: tipo
+    type: STRING
+    role: product
+  id_veiculo:
+    label: Identificador do veículo
+    column: id_veiculo
+    type: INTEGER
+    role: product
+  faixa_preco:
+    label: Faixa de preço
+    column: faixa_preco
+    type: STRING
+    role: band
+    allowed_values:
+      - Até 250 mil
+      - 250k a 350k
+      - 350k a 500k
+      - Acima de 500k
+    notes: Valores exatos retirados da produção.
+  categoria_desconto:
+    label: Categoria de desconto
+    column: categoria_desconto
+    type: STRING
+    role: band
+    allowed_values:
+      - Baixo
+      - Médio
+      - Alto
+    notes: Baixo até 5%, Médio entre 5% e 10%, Alto acima de 10%, aplicados sobre a fração.
+  venda_com_desconto:
+    label: Venda com desconto
+    column: venda_com_desconto
+    type: INTEGER
+    role: flag
+    value_mapping:
+      0: Sem desconto
+      1: Com desconto
+  quantidade_venda:
+    label: Quantidade de venda
+    column: quantidade_venda
+    type: INTEGER
+    role: measure_support
+    notes: Sempre 1 na base atual; não usar para contar vendas.

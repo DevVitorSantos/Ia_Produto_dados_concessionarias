@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+projeto-dev-*.json
+service-account*.json
+client_secret*.json
+.pytest_cache/
+.playwright-mcp/
+*.log
+.coverage
+htmlcov/

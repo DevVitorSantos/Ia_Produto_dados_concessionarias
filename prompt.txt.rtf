@@ -1,0 +1,747 @@
+# PROMPT — Desenvolvimento do MVP de um Assistente de Analytics com IA para Concessionárias
+
+## 1. Contexto do projeto
+
+Quero desenvolver um MVP de um **Assistente de Analytics com Inteligência Artificial para o setor automotivo**, conectado a uma estrutura de dados já existente no Google BigQuery.
+
+O objetivo é permitir que gestores, analistas e profissionais de concessionárias façam perguntas sobre os dados comerciais em linguagem natural e recebam respostas baseadas nos dados reais da empresa.
+
+O usuário deverá conseguir fazer perguntas como:
+
+- Qual foi o faturamento total no último mês?
+- Quais concessionárias venderam mais veículos?
+- Qual vendedor teve o melhor desempenho neste trimestre?
+- Qual é o ticket médio das vendas?
+- Quais modelos de veículos apresentam maior volume de vendas?
+- Como o faturamento evoluiu nos últimos seis meses?
+- Qual foi o percentual médio de desconto concedido?
+- Compare o desempenho das concessionárias por estado.
+- Quais veículos tiveram maior crescimento nas vendas?
+
+A IA deverá interpretar a pergunta, identificar os indicadores e dimensões necessários, consultar o BigQuery de forma controlada e apresentar uma resposta compreensível, acompanhada de números, tabelas ou gráficos quando fizer sentido.
+
+**Importante:** não quero apenas um chatbot que responda com conhecimento genérico. Quero um assistente de análise de dados conectado à estrutura real do projeto.
+
+---
+
+## 2. Projeto de dados existente
+
+O projeto que servirá como fonte de dados já está desenvolvido e disponível no GitHub:
+
+**Repositório:**  
+https://github.com/DevVitorSantos/Produto_dados_concessionarias
+
+Antes de começar a desenvolver o chatbot, analise esse repositório.
+
+É necessário compreender:
+
+- Estrutura de diretórios.
+- Arquivos de configuração.
+- Modelagem de dados.
+- Transformações implementadas.
+- Tabelas e views disponíveis no BigQuery.
+- Relacionamentos entre dimensões e fatos.
+- Indicadores e cálculos já existentes.
+- Configuração do Dataform.
+- Dashboards existentes no Looker Studio, quando documentados.
+
+Não presuma nomes de tabelas, colunas ou métricas sem verificar os arquivos do projeto.
+
+Caso não seja possível acessar o repositório diretamente, solicite os arquivos necessários antes de implementar consultas específicas.
+
+---
+
+## 3. Arquitetura de dados existente
+
+O projeto utiliza uma arquitetura de dados baseada em três camadas: Bronze, Silver e Gold.
+
+### 3.1. Bronze — Dados brutos
+
+Camada responsável por armazenar os dados originais no Google BigQuery.
+
+Atualmente, o projeto contempla oito tabelas de origem:
+
+- clientes
+- vendas
+- veiculos
+- vendedores
+- concessionarias
+- cidades
+- estados
+- customers
+
+Responsabilidades:
+
+- Armazenar os dados recebidos das fontes.
+- Preservar os dados originais.
+- Servir como origem para as transformações seguintes.
+
+O chatbot não deverá consultar diretamente essa camada.
+
+### 3.2. Silver — Dados tratados e enriquecidos
+
+Camada construída utilizando Dataform.
+
+Contempla dimensões e fatos tratados, incluindo:
+
+**Dimensões:**
+- dim_clientes
+- dim_veiculos
+- dim_vendedores
+- dim_concessionarias
+- dim_calendario
+
+**Fatos:**
+- fato_vendas
+- fato_vendas_enriquecida
+
+Responsabilidades:
+
+- Padronização e limpeza dos dados.
+- Tratamento de inconsistências.
+- Relacionamento entre entidades.
+- Cálculo de descontos.
+- Classificação de faixas de preço.
+- Classificação de categorias de desconto.
+- Cálculo de tickets e percentuais.
+- Enriquecimento das informações comerciais.
+
+O chatbot não deverá consultar diretamente essa camada no MVP.
+
+### 3.3. Gold — Camada analítica
+
+Camada final, organizada para consumo analítico e visualização.
+
+Contempla:
+
+**Dimensões:**
+- dim_tempo
+- dim_cliente
+- dim_veiculo
+- dim_vendedor
+- dim_concessionaria
+
+**Fato:**
+- fato_vendas
+
+**View analítica:**
+- vw_fato_completa
+
+A camada Gold é a fonte oficial de consulta do assistente de IA.
+
+A view `vw_fato_completa` deve ser investigada para entender quais informações estão disponíveis e quais relacionamentos já foram realizados.
+
+Sempre que possível, utilizar as tabelas dimensionais e a tabela fato para análises específicas, respeitando a granularidade e os relacionamentos do modelo.
+
+Não realizar joins que possam duplicar registros ou distorcer indicadores.
+
+### 3.4. Fluxo da arquitetura existente
+
+```text
+FONTES DE DADOS
+      |
+      v
+BIGQUERY — BRONZE
+Dados brutos
+      |
+      v
+DATAFORM — SILVER
+Dados tratados e enriquecidos
+      |
+      v
+BIGQUERY — GOLD
+Modelo dimensional
+      |
+      +------------------------+
+      |                        |
+      v                        v
+LOOKER STUDIO            ASSISTENTE IA
+Dashboards               Streamlit
+                               |
+                               v
+                         OPENAI API
+                               |
+                               v
+                         FUNCTION CALLING
+                               |
+                               v
+                         CAMADA SEMÂNTICA
+                               |
+                               v
+                         BIGQUERY GOLD
+```
+
+O assistente será uma aplicação independente do projeto original de engenharia de dados.
+
+Não modificar ou comprometer a arquitetura existente.
+
+---
+
+## 4. Objetivo do novo projeto
+
+Criar uma aplicação independente chamada:
+
+**AI Analytics Assistant — Concessionárias**
+
+A aplicação será desenvolvida em Python utilizando Streamlit e hospedada inicialmente no Streamlit Community Cloud.
+
+A inteligência será fornecida pela API da OpenAI.
+
+A aplicação deverá funcionar como uma camada adicional de consumo analítico, conectando a OpenAI ao BigQuery por meio de ferramentas controladas.
+
+### Stack tecnológica
+
+- Python
+- Streamlit
+- OpenAI API
+- OpenAI Responses API
+- Function Calling
+- Google BigQuery
+- Google Cloud Authentication
+- Pandas
+- Plotly
+- YAML
+- PyYAML
+- Pytest
+
+Utilizar versões estáveis e compatíveis das bibliotecas.
+
+---
+
+## 5. Arquitetura proposta para o assistente
+
+A arquitetura deverá separar as responsabilidades em módulos independentes.
+
+### 5.1. Interface — Streamlit
+
+Responsável pela interação com o usuário.
+
+Funcionalidades:
+
+- Interface de chatbot.
+- Campo para digitação de perguntas.
+- Histórico de mensagens durante a sessão.
+- Exibição das respostas.
+- Exibição de tabelas.
+- Gráficos dinâmicos.
+- Sugestões de perguntas.
+- Indicadores principais.
+- Tratamento de erros.
+
+### 5.2. Inteligência artificial — OpenAI
+
+A OpenAI será responsável por interpretar as perguntas e decidir quais ferramentas analíticas precisam ser utilizadas.
+
+O modelo não deverá ter acesso direto e irrestrito ao banco de dados.
+
+Deverá utilizar Function Calling para acionar ferramentas previamente definidas.
+
+Fluxo esperado:
+
+1. Usuário envia uma pergunta.
+2. O modelo interpreta a intenção.
+3. Identifica o indicador e as dimensões necessárias.
+4. Solicita a execução de uma ferramenta.
+5. O backend valida os parâmetros.
+6. A ferramenta executa uma consulta permitida no BigQuery.
+7. Os resultados retornam ao modelo.
+8. O modelo interpreta os resultados.
+9. A aplicação apresenta a resposta ao usuário.
+
+Utilizar a OpenAI Responses API e a implementação atual de Function Calling, conforme a documentação oficial disponível.
+
+Não utilizar métodos ou bibliotecas depreciados.
+
+### 5.3. Camada semântica
+
+Criar uma camada semântica para centralizar as definições dos indicadores e regras de negócio.
+
+Essa camada será fundamental para evitar que a IA interprete incorretamente os dados.
+
+Criar arquivos YAML separados:
+
+**metrics.yaml**
+
+Definição dos indicadores:
+
+- Faturamento.
+- Quantidade de vendas.
+- Ticket médio.
+- Desconto médio.
+- Percentual de desconto.
+- Quantidade de veículos vendidos.
+- Outros indicadores identificados no projeto.
+
+Cada indicador deverá conter:
+
+- Nome.
+- Descrição.
+- Fórmula.
+- Origem.
+- Tipo de agregação.
+- Unidade.
+- Regras de cálculo.
+- Restrições de uso.
+
+**dimensions.yaml**
+
+Definição das dimensões disponíveis:
+
+- Tempo.
+- Cliente.
+- Veículo.
+- Vendedor.
+- Concessionária.
+- Localização geográfica.
+
+**business_rules.yaml**
+
+Definição das regras de negócio:
+
+- O que caracteriza uma venda.
+- Como calcular o faturamento.
+- Como calcular ticket médio.
+- Como tratar descontos.
+- Como comparar períodos.
+- Como interpretar os indicadores.
+
+As regras deverão ser extraídas do projeto original sempre que possível.
+
+Não inventar regras de negócio.
+
+**schema.yaml**
+
+Mapeamento das tabelas, views, colunas, tipos de dados e relacionamentos reais identificados na camada Gold.
+
+---
+
+## 6. Ferramentas que a IA poderá utilizar
+
+Criar ferramentas controladas para atender às principais necessidades analíticas.
+
+### Ferramenta 1 — get_kpi
+
+Consulta indicadores específicos.
+
+Exemplos:
+
+- Faturamento total.
+- Ticket médio.
+- Quantidade de vendas.
+- Desconto médio.
+
+Parâmetros:
+
+- Indicador.
+- Data inicial.
+- Data final.
+- Filtros opcionais.
+
+### Ferramenta 2 — get_ranking
+
+Retorna rankings de desempenho.
+
+Exemplos:
+
+- Top 10 vendedores.
+- Top 5 concessionárias.
+- Modelos mais vendidos.
+- Clientes com maior volume de compras.
+
+Parâmetros:
+
+- Dimensão de agrupamento.
+- Indicador.
+- Período.
+- Limite de resultados.
+
+### Ferramenta 3 — compare_periods
+
+Compara indicadores entre períodos.
+
+Exemplos:
+
+- Faturamento deste mês versus mês anterior.
+- Vendas do trimestre atual versus anterior.
+- Crescimento anual.
+
+Retornar:
+
+- Valor do período atual.
+- Valor do período anterior.
+- Diferença absoluta.
+- Variação percentual.
+
+### Ferramenta 4 — get_trend
+
+Consulta séries temporais.
+
+Exemplos:
+
+- Evolução mensal do faturamento.
+- Evolução das vendas.
+- Evolução do ticket médio.
+
+Retornar dados estruturados para criação de gráficos.
+
+### Ferramenta 5 — get_filtered_data
+
+Permite consultas analíticas com filtros controlados.
+
+Exemplos:
+
+- Vendas por estado.
+- Vendas por modelo.
+- Desempenho por concessionária.
+- Desempenho por vendedor.
+
+Não permitir que o modelo execute comandos SQL arbitrários diretamente.
+
+Caso seja necessário implementar consultas dinâmicas, criar um mecanismo de geração de SQL com validação rigorosa, utilizando exclusivamente tabelas, colunas e operações autorizadas pela camada semântica.
+
+---
+
+## 7. Segurança e governança
+
+A aplicação deverá seguir boas práticas de segurança.
+
+Requisitos obrigatórios:
+
+1. Utilizar uma conta de serviço do Google Cloud com acesso somente de leitura aos dados analíticos necessários.
+2. Restringir o acesso ao dataset Gold.
+3. Não permitir INSERT, UPDATE, DELETE, CREATE ou DROP.
+4. Não permitir consultas a datasets fora da lista autorizada.
+5. Validar parâmetros antes de executar consultas.
+6. Utilizar parâmetros SQL em vez de concatenar valores fornecidos pelo usuário.
+7. Implementar limite de registros retornados.
+8. Implementar timeout nas consultas.
+9. Não expor credenciais no código.
+10. Não armazenar a chave da OpenAI no repositório.
+11. Não registrar credenciais ou dados sensíveis nos logs.
+
+As consultas deverão ser executadas somente por ferramentas autorizadas do backend.
+
+---
+
+## 8. Estrutura de diretórios desejada
+
+Criar o projeto com a seguinte estrutura:
+
+```text
+AI_Analytics_Assistant/
+│
+├── streamlit_app.py
+│
+├── pages/
+│   ├── 1_Chat_IA.py
+│   ├── 2_Indicadores.py
+│   └── 3_Historico.py
+│
+├── agent/
+│   ├── assistant.py
+│   ├── instructions.py
+│   └── tools.py
+│
+├── services/
+│   ├── openai_service.py
+│   ├── bigquery_service.py
+│   └── response_service.py
+│
+├── semantic_layer/
+│   ├── metrics.yaml
+│   ├── dimensions.yaml
+│   ├── business_rules.yaml
+│   └── schema.yaml
+│
+├── queries/
+│   ├── kpis.py
+│   ├── rankings.py
+│   ├── comparisons.py
+│   └── trends.py
+│
+├── tests/
+│   ├── test_metrics.py
+│   ├── test_tools.py
+│   └── test_queries.py
+│
+├── .streamlit/
+│   └── config.toml
+│
+├── .gitignore
+├── requirements.txt
+└── README.md
+```
+
+A estrutura poderá ser ajustada caso a análise técnica indique uma organização melhor, mas as responsabilidades deverão continuar separadas.
+
+---
+
+## 9. Interface do usuário
+
+A aplicação deverá ter uma interface simples, moderna e profissional.
+
+### Página 1 — Chat com IA
+
+Tela principal do produto.
+
+Elementos:
+
+- Nome do assistente.
+- Mensagem inicial explicando suas capacidades.
+- Campo de pergunta.
+- Histórico de conversa.
+- Sugestões de perguntas.
+- Respostas formatadas.
+- Indicadores destacados.
+- Tabelas e gráficos quando aplicáveis.
+
+Exemplo de interação:
+
+**Usuário:**
+
+"Qual foi o faturamento das concessionárias nos últimos seis meses?"
+
+**Assistente:**
+
+"Nos últimos seis meses, o faturamento total foi de R$ X, distribuído entre Y vendas."
+
+Exibir, quando possível:
+
+- Indicador principal.
+- Comparação com o período anterior.
+- Gráfico de evolução mensal.
+- Tabela detalhada.
+
+Os valores acima são apenas exemplos de apresentação. Os valores reais deverão vir exclusivamente do BigQuery.
+
+### Página 2 — Indicadores
+
+Criar uma visão geral dos principais indicadores disponíveis.
+
+Exibir cards com:
+
+- Faturamento.
+- Vendas realizadas.
+- Ticket médio.
+- Desconto médio.
+- Veículos vendidos.
+
+Adicionar filtros de período quando suportados pelos dados.
+
+### Página 3 — Histórico
+
+Criar uma página para consultar as perguntas e respostas realizadas durante a sessão.
+
+No MVP, pode utilizar `st.session_state`.
+
+Deixar a arquitetura preparada para futuramente persistir o histórico em Firestore ou outra solução.
+
+---
+
+## 10. Configuração de ambiente
+
+Criar um arquivo `.streamlit/secrets.toml` de exemplo, sem credenciais reais.
+
+Estrutura esperada:
+
+```toml
+OPENAI_API_KEY = "SUA_CHAVE_OPENAI"
+
+GCP_PROJECT_ID = "SEU_PROJETO_GCP"
+GCP_DATASET = "SEU_DATASET_GOLD"
+GCP_LOCATION = "US"
+
+GOOGLE_APPLICATION_CREDENTIALS_JSON = '''
+{
+  "type": "service_account",
+  "project_id": "SEU_PROJETO"
+}
+'''
+```
+
+Ajustar o mecanismo de autenticação à forma de execução:
+
+- Ambiente local: credenciais do Google Cloud ou arquivo JSON de serviço.
+- Streamlit Community Cloud: credenciais armazenadas nos Secrets da aplicação.
+
+Nunca incluir o arquivo real de credenciais no GitHub.
+
+O `.gitignore` deverá proteger arquivos de secrets, credenciais e ambientes virtuais.
+
+---
+
+## 11. Etapas de desenvolvimento
+
+Não desenvolver tudo de uma vez sem validar a integração.
+
+Seguir as etapas abaixo:
+
+### Fase 1 — Análise do projeto original
+
+- Analisar o repositório GitHub.
+- Identificar o projeto BigQuery.
+- Identificar o dataset Gold.
+- Identificar tabelas e views.
+- Identificar colunas e tipos.
+- Entender as métricas existentes.
+- Mapear os relacionamentos.
+- Documentar as descobertas.
+
+Entregável: documentação técnica da fonte de dados.
+
+### Fase 2 — Conexão com BigQuery
+
+- Implementar autenticação.
+- Implementar conexão.
+- Validar acesso ao dataset Gold.
+- Executar consultas de teste.
+- Validar resultados.
+- Implementar controle de erros.
+
+Entregável: aplicação capaz de consultar os dados reais.
+
+### Fase 3 — Camada semântica
+
+- Criar os arquivos YAML.
+- Mapear indicadores.
+- Mapear dimensões.
+- Documentar regras de negócio.
+- Validar cálculos.
+- Criar testes automatizados.
+
+Entregável: camada semântica funcional.
+
+### Fase 4 — Integração com OpenAI
+
+- Configurar OpenAI API.
+- Criar instruções do assistente.
+- Implementar Function Calling.
+- Implementar ferramentas analíticas.
+- Conectar ferramentas ao BigQuery.
+- Validar o fluxo completo de perguntas e respostas.
+
+Entregável: chatbot funcional conectado aos dados.
+
+### Fase 5 — Interface e visualizações
+
+- Construir a interface Streamlit.
+- Implementar histórico.
+- Criar cards de indicadores.
+- Criar gráficos com Plotly.
+- Implementar tabelas.
+- Melhorar a experiência de uso.
+
+Entregável: MVP utilizável.
+
+### Fase 6 — Deploy
+
+- Preparar o projeto para GitHub.
+- Configurar Secrets no Streamlit Community Cloud.
+- Publicar a aplicação.
+- Validar autenticação no ambiente de produção.
+- Testar consultas reais.
+
+Entregável: MVP publicado e acessível pela web.
+
+---
+
+## 12. Requisitos de qualidade
+
+O projeto deverá seguir boas práticas de desenvolvimento:
+
+- Código organizado e modular.
+- Funções com responsabilidades específicas.
+- Tipagem quando fizer sentido.
+- Tratamento de exceções.
+- Logs sem dados sensíveis.
+- Testes automatizados.
+- Documentação de instalação.
+- Documentação de configuração.
+- Documentação de deploy.
+- Separação entre interface, regras de negócio e serviços.
+
+Não criar uma aplicação monolítica em um único arquivo Python.
+
+Não deixar funcionalidades essenciais simuladas ou com respostas fictícias.
+
+Caso alguma funcionalidade ainda não esteja implementada, sinalizar claramente.
+
+---
+
+## 13. Comportamento esperado da IA
+
+O assistente deverá:
+
+- Responder em português brasileiro.
+- Utilizar linguagem clara e objetiva.
+- Priorizar respostas orientadas a negócio.
+- Não inventar números.
+- Não inventar métricas.
+- Não assumir informações que não estejam disponíveis.
+- Informar quando não houver dados suficientes.
+- Informar o período analisado.
+- Explicar brevemente como chegou ao resultado.
+- Diferenciar valores absolutos de percentuais.
+- Utilizar comparações quando forem relevantes.
+- Apresentar tabelas e gráficos quando ajudarem na interpretação.
+
+Se o usuário perguntar algo que não possa ser respondido pela estrutura disponível, explicar a limitação em vez de gerar uma resposta especulativa.
+
+---
+
+## 14. Critérios de conclusão do MVP
+
+O MVP será considerado funcional quando:
+
+1. A aplicação estiver conectada ao BigQuery.
+2. A aplicação consultar exclusivamente a camada Gold.
+3. A OpenAI interpretar perguntas em linguagem natural.
+4. O Function Calling acionar ferramentas corretamente.
+5. As ferramentas retornarem dados reais.
+6. O assistente conseguir responder perguntas sobre faturamento, vendas, ticket médio e rankings, conforme os campos disponíveis.
+7. O assistente conseguir realizar comparações temporais quando houver dados suficientes.
+8. A aplicação apresentar tabelas e gráficos.
+9. As credenciais estiverem protegidas.
+10. O projeto estiver pronto para deploy no Streamlit Community Cloud.
+
+---
+
+## 15. Orientação final para o agente de desenvolvimento
+
+Atue como um engenheiro de software especializado em engenharia de dados, Python, BigQuery, aplicações analíticas e integração com LLMs.
+
+**Antes de escrever código, analise o projeto original:**
+
+https://github.com/DevVitorSantos/Produto_dados_concessionarias
+
+Entenda a arquitetura Bronze, Silver e Gold e identifique a estrutura real dos dados disponíveis.
+
+Não modifique o projeto original de engenharia de dados.
+
+Desenvolva o assistente em uma aplicação independente.
+
+Priorize um MVP funcional, simples e bem estruturado, em vez de implementar funcionalidades complexas prematuramente.
+
+Não invente tabelas, colunas, indicadores ou regras de negócio.
+
+Se alguma informação necessária estiver ausente, documente a ausência e solicite o dado antes de implementar a funcionalidade dependente dele.
+
+**Ordem de prioridade:**
+
+1. Conectar ao BigQuery.
+2. Consultar corretamente os dados Gold.
+3. Implementar a camada semântica.
+4. Integrar OpenAI com Function Calling.
+5. Construir o chatbot.
+6. Criar visualizações.
+7. Preparar o deploy.
+
+Ao concluir cada fase, apresente:
+
+- O que foi desenvolvido.
+- Quais arquivos foram criados ou alterados.
+- Como testar.
+- Quais pendências existem.
+- Qual será a próxima etapa.
+
+O objetivo final é transformar a estrutura de dados existente em um produto de Analytics conversacional, permitindo que gestores de concessionárias consultem indicadores e obtenham insights sem precisar escrever SQL ou navegar manualmente por dashboards.

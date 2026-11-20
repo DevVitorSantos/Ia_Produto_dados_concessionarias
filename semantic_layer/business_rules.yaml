@@ -1,0 +1,74 @@
+version: 1
+rules:
+  - id: fonte_oficial
+    rule: A fonte oficial das métricas é o BigQuery de produção, projeto projeto-dev-410722, dataset gold_clau, localização US.
+    action: Ignorar regras do repositório GitHub quando houver divergência em relação aos dados medidos na produção.
+    severity: critical
+  - id: objeto_autorizado
+    rule: Consultar somente a view gold_clau.vw_fato_completa para perguntas analíticas.
+    action: Não consultar tabelas silver, staging ou tabelas externas; não aceitar SQL arbitrário do usuário ou do modelo.
+    severity: critical
+  - id: somente_leitura
+    rule: Toda consulta deve ser somente leitura, começando com SELECT ou WITH.
+    action: Rejeitar INSERT, UPDATE, DELETE, MERGE, CREATE, DROP, ALTER, TRUNCATE, GRANT, REVOKE, CALL, EXECUTE, SCRIPT, EXPORT, LOAD e COPY.
+    severity: critical
+  - id: seguranca_credenciais
+    rule: Credenciais devem ficar em Secrets ou variáveis de ambiente, nunca no código, logs ou respostas.
+    action: Não exibir chaves, e-mails de service account, JSON de credencial ou detalhes de autenticação ao usuário.
+    severity: critical
+  - id: venda
+    rule: Uma venda é um registro distinto em vw_fato_completa identificado por id_venda.
+    action: Contar vendas com COUNT(DISTINCT id_venda), não com SUM(quantidade_venda).
+    severity: high
+  - id: faturamento
+    rule: Faturamento é a soma de valor_pago.
+    action: Usar SUM(valor_pago), sem considerar valor de tabela ou valor de desconto.
+    severity: high
+  - id: ticket_medio
+    rule: Ticket médio é faturamento dividido pela quantidade de vendas.
+    action: Usar SUM(valor_pago) / NULLIF(COUNT(DISTINCT id_venda), 0); nunca AVG(ticket_medio).
+    severity: high
+  - id: desconto_com_sinal
+    rule: valor_desconto e percentual_desconto têm sinal; valor negativo significa venda acima da tabela.
+    action: Explicar o sinal sempre que responder sobre desconto e não apresentar valores negativos como desconto concedido.
+    severity: high
+  - id: percentual_desconto
+    rule: percentual_desconto é uma fração não arredondada, por exemplo 0,1159 equivale a 11,59%.
+    action: Converter para porcentagem apenas ao formatar a resposta; não usar a escala 0 a 100 do repositório.
+    severity: high
+  - id: desconto_medio_ponderado
+    rule: O percentual médio de desconto do negócio é ponderado pelo valor de tabela.
+    action: Usar SUM(valor_desconto) / NULLIF(SUM(valor_tabela), 0). Usar AVG(percentual_desconto) somente se o usuário pedir média simples por venda.
+    severity: medium
+  - id: categorias_reais
+    rule: As categorias de desconto em produção são Baixo, Médio e Alto.
+    action: Não usar Sem Desconto, Leve, Moderado ou Agressivo; limites em 5% e 10% da fração.
+    severity: medium
+  - id: faixas_reais
+    rule: As faixas de preço em produção são Até 250 mil, 250k a 350k, 350k a 500k e Acima de 500k.
+    action: Não usar Popular, Padrão, Alto Padrão ou Premium.
+    severity: medium
+  - id: cliente_sintetico
+    rule: "Cerca de 84% dos rótulos de cliente são gerados pela view como Cliente #id_cliente."
+    action: "Sempre que aparecer Cliente # em uma resposta, informar que não houve correspondência em dim_cliente e que contagens de clientes podem ser imprecisas."
+    severity: high
+  - id: periodo_disponivel
+    rule: Os dados terminam em 2026-07-02.
+    action: Interpretar último mês como o último mês disponível na base e informar o período usado em toda resposta temporal.
+    severity: high
+  - id: metas_indisponiveis
+    rule: Metas mensal e anual, forecast e classificação de performance não existem como dados na Gold.
+    action: Recusar responder metas ou previsões com números; explicar que não há fonte na Gold e oferecer indicadores disponíveis.
+    severity: high
+  - id: comparacao_temporal
+    rule: Comparações temporais exigem dois períodos com dados disponíveis.
+    action: Calcular variação absoluta e percentual; quando não houver período anterior, informar que a comparação não é possível.
+    severity: medium
+  - id: sem_dados
+    rule: Filtros podem retornar zero registros.
+    action: Responder que não há dados para o filtro informado, sem inventar valores ou usar médias globais.
+    severity: high
+  - id: formato_resposta
+    rule: Respostas devem ser em português brasileiro, objetivas e rastreáveis.
+    action: Informar o indicador, o período, o filtro aplicado e, quando relevante, a fórmula usada.
+    severity: medium

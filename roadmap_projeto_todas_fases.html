@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap completo do MVP | AI Analytics Assistant — Concessionárias</title>
+<style>
+  :root {
+    --ink: #1f2937;
+    --muted: #5b6472;
+    --line: #d7dce3;
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --blue: #1967d2;
+    --blue-dark: #123a75;
+    --blue-soft: #e8f0fe;
+    --green: #1e7e45;
+    --green-soft: #e6f4ea;
+    --amber: #8a5a00;
+    --amber-soft: #fff4d6;
+    --gray-soft: #eef1f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Segoe UI", Inter, system-ui, -apple-system, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+  header {
+    background: linear-gradient(135deg, #0d2f63, #1967d2);
+    color: #fff;
+    border-radius: 16px;
+    padding: 30px 34px;
+    margin-bottom: 24px;
+  }
+  header h1 { margin: 0 0 8px; font-size: 1.8rem; }
+  header p { margin: 0; opacity: .93; }
+  .meta { margin-top: 16px; font-size: .85rem; opacity: .85; }
+  section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+  }
+  h2 { margin: 0 0 16px; font-size: 1.25rem; color: var(--blue-dark); }
+  h3 { margin: 22px 0 8px; font-size: 1.05rem; }
+  h3:first-of-type { margin-top: 0; }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 5px 0; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: .9em; background: #f1f3f5; padding: 1px 5px; border-radius: 4px; }
+  pre { background: #17202c; color: #e8eef7; padding: 14px 16px; border-radius: 10px; overflow-x: auto; font-size: .85rem; }
+  pre code { background: transparent; padding: 0; color: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .9rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f4fa; }
+  .pill { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: .78rem; font-weight: 600; margin: 2px 4px 2px 0; }
+  .ok { background: var(--green-soft); color: var(--green); }
+  .pending { background: var(--amber-soft); color: var(--amber); }
+  .info { background: var(--blue-soft); color: var(--blue); }
+  .idle { background: var(--gray-soft); color: var(--muted); }
+  .note { border-left: 4px solid var(--blue); background: var(--blue-soft); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; }
+  .warn { border-left-color: var(--amber); background: var(--amber-soft); }
+  .phase { border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 10px; padding: 16px 18px; margin: 18px 0; }
+  .phase.done { border-left-color: var(--green); }
+  .phase.next { border-left-color: var(--blue); }
+  .phase h3 { margin-top: 0; }
+  .phase-meta { font-size: .82rem; color: var(--muted); margin-bottom: 10px; }
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li { display: flex; gap: 10px; align-items: flex-start; }
+  .checklist input { margin-top: 5px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+  footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 12px; }
+  @media print {
+    body { background: #fff; }
+    section, .phase { break-inside: avoid; }
+    header { background: #0d2f63 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Roadmap completo do MVP</h1>
+  <p>AI Analytics Assistant — Concessionárias · situação atual de todas as fases, o que já foi feito, o que falta e os entregáveis de cada etapa.</p>
+  <div class="meta">
+    Fontes: <code>prompt.txt.rtf</code>, repositório <code>DevVitorSantos/Produto_dados_concessionarias</code> (commit <code>e978e44</code>) e validações reais no BigQuery <code>projeto-dev-410722.gold_clau</code> (US).<br>
+    Nenhum código da aplicação foi escrito ainda — esta é uma visão de plano e andamento.
+  </div>
+</header>
+
+<section>
+  <h2>1. Visão geral do progresso</h2>
+  <p>
+    <span class="pill ok">Fases 1 a 3 concluídas</span>
+    <span class="pill ok">Fase 4 implementada</span>
+    <span class="pill info">Fase 5 implementada</span>
+    <span class="pill idle">Fase 6 não iniciada</span>
+  </p>
+  <table>
+    <thead><tr><th>Fase</th><th>Objetivo</th><th>Entregável</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>1 — Análise do projeto original</td><td>Entender a fonte de dados real</td><td>Documentação técnica da fonte de dados</td><td><span class="pill ok">Concluída</span></td></tr>
+      <tr><td>2 — Conexão com BigQuery</td><td>Autenticar, conectar e consultar o Gold</td><td>Aplicação capaz de consultar dados reais</td><td><span class="pill ok">Concluída</span></td></tr>
+      <tr><td>3 — Camada semântica</td><td>Definir métricas, dimensões e regras</td><td>Camada semântica funcional</td><td><span class="pill ok">Concluída</span></td></tr>
+      <tr><td>4 — Integração com OpenAI</td><td>Interpretar perguntas e acionar ferramentas</td><td>Chatbot funcional conectado aos dados</td><td><span class="pill ok">Implementada e validada ao vivo</span></td></tr>
+      <tr><td>5 — Interface e visualizações</td><td>Construir as páginas e gráficos</td><td>MVP utilizável</td><td><span class="pill ok">Implementada e validada ao vivo</span></td></tr>
+      <tr><td>6 — Deploy</td><td>Publicar no Streamlit Community Cloud</td><td>MVP publicado e acessível</td><td><span class="pill idle">Não iniciada</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">
+    Ordem obrigatória do prompt: conectar ao BigQuery, consultar corretamente o Gold, implementar a camada semântica, integrar OpenAI com Function Calling, construir o chatbot, criar visualizações e preparar o deploy. Não desenvolver tudo de uma vez sem validar a integração.
+  </div>
+</section>
+
+<section>
+  <h2>2. Produto alvo e restrições</h2>
+  <div class="cols">
+    <div>
+      <h3>O que será construído</h3>
+      <ul>
+        <li>Aplicação independente <strong>AI Analytics Assistant — Concessionárias</strong>, em Python + Streamlit.</li>
+        <li>Inteligência via <strong>OpenAI Responses API</strong> com <strong>Function Calling</strong>.</li>
+        <li>Consulta exclusiva à camada <strong>Gold</strong> do BigQuery (<code>gold_clau</code>).</li>
+        <li>Respostas em português brasileiro, com números reais, tabelas e gráficos Plotly.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Ferramentas controladas</h3>
+      <ul>
+        <li><code>get_kpi</code> — faturamento, vendas, ticket médio, desconto.</li>
+        <li><code>get_ranking</code> — vendedores, concessionárias, modelos, clientes.</li>
+        <li><code>compare_periods</code> — atual vs anterior, com variação absoluta e percentual.</li>
+        <li><code>get_trend</code> — séries temporais para gráficos.</li>
+        <li><code>get_filtered_data</code> — filtros controlados, sem SQL arbitrária.</li>
+      </ul>
+    </div>
+  </div>
+  <h3>Regras de segurança obrigatórias</h3>
+  <ul>
+    <li>Conta de serviço somente leitura; acesso restrito ao dataset Gold; proibidos INSERT, UPDATE, DELETE, CREATE e DROP.</li>
+    <li>Validação de parâmetros, consultas parametrizadas, limite de registros e timeout.</li>
+    <li>Nenhuma credencial no código, nos logs ou no repositório.</li>
+    <li>O modelo não recebe acesso direto e irrestrito ao banco — apenas ferramentas autorizadas.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>3. O que já fizemos</h2>
+  <h3>Fase 1 — Análise da fonte de dados</h3>
+  <ul class="checklist">
+    <li><input type="checkbox" checked> Repositório GitHub acessado, clonado e lido até o commit <code>e978e44</code></li>
+    <li><input type="checkbox" checked> Estrutura mapeada: <code>definitions/silver</code> (7 .sqlx), <code>definitions/gold</code> (6 tabelas + 1 view), <code>docs/</code>, README e documento de requisitos</li>
+    <li><input type="checkbox" checked> Regras do README, do guia de dashboards e dos arquivos .sqlx extraídas</li>
+    <li><input type="checkbox" checked> Credenciais informadas: projeto <code>projeto-dev-410722</code>, dataset <code>gold_clau</code>, localização <code>US</code>, JSON de service account na pasta do projeto</li>
+    <li><input type="checkbox" checked> Permissão <code>bigquery.jobs.create</code> concedida após o primeiro erro 403; consultas passaram a executar</li>
+    <li><input type="checkbox" checked> 7 objetos e 38 colunas confirmados no BigQuery; SQL real da view lida via API</li>
+    <li><input type="checkbox" checked> Dados validados: 7.720 vendas, R$ 3.444.157.639,69, período 01/01/2025 a 02/07/2026, chaves de dimensão únicas, sem duplicação</li>
+    <li><input type="checkbox" checked> Divergências entre o repositório e a produção documentadas</li>
+    <li><input type="checkbox" checked> Documento <code>fase1_analise_projeto_original.html</code> criado com passo a passo, SQLs, achados e checklists</li>
+  </ul>
+
+  <h3>Descobertas que já impactam as próximas fases</h3>
+  <table>
+    <thead><tr><th>Achado</th><th>Impacto</th></tr></thead>
+    <tbody>
+      <tr><td><code>percentual_desconto</code> é fração com sinal (-2,1626 a 0,7018), não 0 a 100</td><td>A camada semântica e as respostas devem converter para % apenas na formatação</td></tr>
+      <tr><td><code>valor_desconto</code> também tem sinal; 3.793 vendas têm valor pago acima da tabela</td><td>"Desconto médio" pode ser negativo e precisa de explicação</td></tr>
+      <tr><td>Categorias reais: Baixo / Médio / Alto; faixas: até 250k, 250k a 350k, 350k a 500k, acima de 500k</td><td>Não usar os rótulos do repositório (Leve/Moderado/Agressivo, Popular/Premium)</td></tr>
+      <tr><td><code>quantidade_venda = 1</code> sempre e <code>ticket_medio = valor_pago</code></td><td>Ticket médio deve ser <code>SUM(valor_pago)/COUNT(id_venda)</code></td></tr>
+      <tr><td>6.484 de 7.720 vendas usam rótulo sintético <code>Cliente #id</code></td><td>Métricas de clientes precisam de ressalva obrigatória</td></tr>
+      <tr><td>Dados de 2026 terminam em julho; metas e forecast não existem na Gold</td><td>"Último mês" deve usar a última data disponível; perguntas sobre metas devem ser recusadas com limitação</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Artefatos existentes até agora</h3>
+  <table>
+    <thead><tr><th>Arquivo</th><th>Finalidade</th><th>Situação</th></tr></thead>
+    <tbody>
+      <tr><td><code>prompt.txt.rtf</code></td><td>Especificação original do MVP</td><td>Existente</td></tr>
+      <tr><td><code>fase1_analise_projeto_original.html</code></td><td>Passo a passo e descobertas da Fase 1</td><td>Criado</td></tr>
+      <tr><td><code>docs/fase1_documentacao_fonte_dados.md</code></td><td>Documentação técnica da Fase 1 em Markdown</td><td>Criado</td></tr>
+      <tr><td><code>roadmap_projeto_todas_fases.html</code></td><td>Este documento</td><td>Criado</td></tr>
+      <tr><td><code>requirements.txt</code>, <code>.gitignore</code>, <code>.streamlit/secrets.toml.example</code></td><td>Base de dependências e segurança da Fase 2</td><td>Criados</td></tr>
+      <tr><td><code>config.py</code>, <code>services/bigquery_service.py</code></td><td>Configuração e consultas BigQuery somente leitura</td><td>Criados e validados</td></tr>
+      <tr><td><code>tests/test_bigquery_service.py</code>, <code>scripts/smoke_test_bigquery.py</code></td><td>Testes unitários e validação contra dados reais</td><td>Criados; 10 testes aprovados</td></tr>
+      <tr><td><code>docs/fase2_conexao_bigquery.md</code></td><td>Relatório técnico da Fase 2</td><td>Criado</td></tr>
+      <tr><td><code>semantic_layer/schema.yaml</code>, <code>metrics.yaml</code>, <code>dimensions.yaml</code>, <code>business_rules.yaml</code></td><td>Camada semântica oficial da Fase 3</td><td>Criados e validados</td></tr>
+      <tr><td><code>semantic_layer/loader.py</code>, <code>tests/test_semantic_layer.py</code></td><td>Carga, validação e testes da camada semântica</td><td>Criados; 19 testes aprovados no total</td></tr>
+      <tr><td><code>docs/fase3_camada_semantica.md</code></td><td>Relatório técnico da Fase 3</td><td>Criado</td></tr>
+      <tr><td><code>projeto-dev-410722-d07b00c2fe6d.json</code></td><td>Credencial de leitura da service account</td><td>Na pasta, ignorada pelo Git</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>4. Detalhamento das fases</h2>
+
+  <div class="phase done">
+    <h3>Fase 1 — Análise do projeto original</h3>
+    <div class="phase-meta"><span class="pill ok">Concluída</span> Dependência: nenhuma</div>
+    <p><strong>O que foi feito:</strong> repo analisado, Gold real validada no BigQuery, regras e limitações documentadas.</p>
+    <p><strong>Decisões confirmadas:</strong> produção é a fonte oficial; clientes sintéticos devem ser sinalizados; entregável em HTML e Markdown.</p>
+    <p><strong>Falta:</strong> nada. Esta fase está fechada.</p>
+    <p><strong>Entregável:</strong> documentação técnica da fonte de dados — <code>fase1_analise_projeto_original.html</code> e <code>docs/fase1_documentacao_fonte_dados.md</code>.</p>
+  </div>
+
+  <div class="phase next">
+    <h3>Fase 2 — Conexão com BigQuery</h3>
+    <div class="phase-meta"><span class="pill ok">Concluída</span> Dependência: Fase 1 concluída</div>
+    <p><strong>Objetivo:</strong> autenticação, conexão, validação de acesso ao dataset <code>gold_clau</code>, consultas de teste e controle de erros.</p>
+    <ul>
+      <li>Criar estrutura inicial do projeto e <code>requirements.txt</code> com versões estáveis.</li>
+      <li>Implementar <code>services/bigquery_service.py</code> com cliente BigQuery parametrizado por projeto/dataset/locação.</li>
+      <li>Implementar autenticação local (JSON da service account) e em nuvem (Secrets do Streamlit).</li>
+      <li>Criar <code>.streamlit/secrets.toml.example</code> sem credenciais reais e <code>.gitignore</code> protegendo JSON, secrets e venv.</li>
+      <li>Respeitar timeout, limite de linhas e somente operações de leitura.</li>
+      <li>Testar consultas de teste já usadas na Fase 1: contagem, faturamento, desconto e integridade.</li>
+    </ul>
+    <p><strong>Arquivos previstos:</strong> <code>requirements.txt</code>, <code>.gitignore</code>, <code>.streamlit/secrets.toml.example</code>, <code>services/bigquery_service.py</code>, testes de consulta.</p>
+    <p><strong>Entregável:</strong> aplicação capaz de consultar os dados reais.</p>
+    <p><strong>Validação executada:</strong> 10 testes unitários aprovados e smoke test real com 7 objetos Gold, 7.720 vendas, R$ 3.444.157.639,69, perfis de desconto e chaves de dimensão únicas.</p>
+    <p><strong>Falta:</strong> nada. Esta fase está fechada.</p>
+  </div>
+
+  <div class="phase">
+    <h3>Fase 3 — Camada semântica</h3>
+    <div class="phase-meta"><span class="pill ok">Concluída</span> Dependência: Fase 2 concluída</div>
+    <p><strong>Objetivo:</strong> centralizar definições de indicadores, dimensões e regras de negócio para evitar interpretações erradas pela IA.</p>
+    <ul>
+      <li><code>semantic_layer/metrics.yaml</code>: faturamento, vendas, ticket médio, desconto médio, percentual de desconto, veículos vendidos e demais indicadores existentes — com nome, descrição, fórmula, origem, agregação, unidade e restrições.</li>
+      <li><code>semantic_layer/dimensions.yaml</code>: tempo, cliente, veículo, vendedor, concessionária e localização geográfica.</li>
+      <li><code>semantic_layer/business_rules.yaml</code>: o que caracteriza venda, como calcular faturamento e ticket, como tratar desconto, como comparar períodos e como responder quando não houver dados.</li>
+      <li><code>semantic_layer/schema.yaml</code>: tabelas, colunas, tipos e relacionamentos reais da Gold <code>gold_clau</code>.</li>
+      <li>Testes automatizados das fórmulas e dos limites de classificação observados na produção.</li>
+    </ul>
+    <p><strong>Regras já mapeadas para entrar nos YAML:</strong> faturamento = <code>SUM(valor_pago)</code>; vendas = <code>COUNT(id_venda)</code>; ticket médio = <code>SUM(valor_pago)/COUNT(id_venda)</code>; desconto % = fração com sinal; categorias Baixo/Médio/Alto em 5% e 10%; faixas de preço reais; cliente sintético sinalizado.</p>
+    <p><strong>Entregável:</strong> camada semântica funcional.</p>
+    <p><strong>Validação executada:</strong> 19 testes aprovados no total; o loader valida colunas, tipos, chaves, relacionamentos e regras. Relatório em <code>docs/fase3_camada_semantica.md</code>.</p>
+    <p><strong>Falta:</strong> nada. Esta fase está fechada.</p>
+  </div>
+
+  <div class="phase">
+    <h3>Fase 4 — Integração com OpenAI e Function Calling</h3>
+    <div class="phase-meta"><span class="pill info">Implementada</span> Dependência: Fase 3 concluída</div>
+    <p><strong>Objetivo:</strong> interpretar perguntas em linguagem natural e acionar as ferramentas analíticas controladas.</p>
+    <ul>
+      <li>Configurar OpenAI API e usar a implementação atual da Responses API, sem métodos depreciados.</li>
+      <li>Criar <code>agent/instructions.py</code> com instruções: responder em pt-BR, não inventar números, informar período, explicar o cálculo, sinalizar limitações.</li>
+      <li>Implementar <code>agent/tools.py</code> com as 5 ferramentas, validação rigorosa de parâmetros e mapeamento para <code>queries/analytics.py</code>, derivado da camada semântica.</li>
+      <li>Implementar <code>services/openai_service.py</code> e <code>services/response_service.py</code>, incluindo o ciclo completo: pergunta, intenção, ferramenta, validação, consulta, retorno e resposta.</li>
+      <li>Garantir que nenhuma ferramenta aceite SQL arbitrário.</li>
+    </ul>
+    <p><strong>Entregável:</strong> chatbot funcional conectado aos dados.</p>
+    <p><strong>Validação:</strong> fluxo ponta a ponta validado no Chat IA com OpenAI e BigQuery; a chave exposta ainda deve ser rotacionada.</p>
+  </div>
+
+  <div class="phase">
+    <h3>Fase 5 — Interface e visualizações</h3>
+    <div class="phase-meta"><span class="pill ok">Implementada</span> Dependência: Fase 4</div>
+    <p><strong>Objetivo:</strong> transformar o fluxo em um MVP utilizável com interface simples, moderna e profissional.</p>
+    <ul>
+      <li><code>streamlit_app.py</code> com navegação e configuração global.</li>
+      <li><code>pages/1_Chat_IA.py</code>: mensagem inicial, campo de pergunta, histórico, sugestões, respostas formatadas, cards, tabelas e gráficos.</li>
+      <li><code>pages/2_Indicadores.py</code>: cards de faturamento, vendas, ticket médio, desconto médio e veículos vendidos, com filtros de período suportados.</li>
+      <li><code>pages/3_Historico.py</code>: perguntas e respostas da sessão via <code>st.session_state</code> e exportação CSV.</li>
+      <li><code>pages/4_Qualidade.py</code>: buscas repetidas, notas de qualidade e tempo de resposta a partir do BigQuery.</li>
+      <li>Gráficos Plotly para evolução, rankings e comparações; tratamento de erros visível ao usuário.</li>
+    </ul>
+    <p><strong>Entregável:</strong> MVP utilizável com rastreamento de qualidade.</p>
+    <p><strong>Falta:</strong> configurar o dataset <code>analytics_ops</code> antes do primeiro registro; detalhes em <code>docs/qualidade_rastreamento.md</code>.</p>
+  </div>
+
+  <div class="phase">
+    <h3>Fase 6 — Deploy</h3>
+    <div class="phase-meta"><span class="pill idle">Não iniciada</span> Dependência: Fase 5</div>
+    <p><strong>Objetivo:</strong> preparar o GitHub, publicar no Streamlit Community Cloud e validar em produção.</p>
+    <ul>
+      <li>Versionar apenas arquivos de código; confirmar que o JSON de credenciais e secrets não entram no repositório.</li>
+      <li>Configurar os Secrets da aplicação: <code>OPENAI_API_KEY</code>, <code>GCP_PROJECT_ID</code>, <code>GCP_DATASET</code>, <code>GCP_LOCATION</code> e <code>GOOGLE_APPLICATION_CREDENTIALS_JSON</code>.</li>
+      <li>Publicar e validar autenticação, consultas reais, limites e tratamento de erros no ambiente hospedado.</li>
+      <li>Documentar instalação, configuração e deploy no <code>README.md</code>.</li>
+    </ul>
+    <p><strong>Entregável:</strong> MVP publicado e acessível pela web.</p>
+    <p><strong>Falta:</strong> conta no Streamlit Community Cloud, chave OpenAI e revisão final de segurança.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5. Pendências consolidadas</h2>
+  <table>
+    <thead><tr><th>#</th><th>Pendência</th><th>Responsável</th><th>Bloqueia</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Confirmar que a produção (BigQuery) é a fonte oficial das métricas, não o repositório</td><td>Você</td><td><span class="pill ok">Confirmado</span></td></tr>
+      <tr><td>2</td><td>Confirmar que as respostas devem sinalizar os 6.484 clientes sintéticos</td><td>Você</td><td><span class="pill ok">Confirmado</span></td></tr>
+      <tr><td>3</td><td>Definir se o entregável técnico da Fase 1 também será Markdown em <code>docs/</code></td><td>Você</td><td><span class="pill ok">Confirmado — entregar HTML e MD</span></td></tr>
+      <tr><td>4</td><td>Garantir que <code>projeto-dev-410722-d07b00c2fe6d.json</code> ficará fora do Git</td><td>Você / eu na Fase 2</td><td><span class="pill ok">Concluído — validado no Fase 2</span></td></tr>
+      <tr><td>5</td><td>Revogar a chave exposta e configurar chave OpenAI nova via Secrets/env</td><td>Você</td><td><span class="pill pending">Pendente</span></td></tr>
+      <tr><td>6</td><td>Conta no Streamlit Community Cloud para publicação</td><td>Você</td><td>Fase 6</td></tr>
+      <tr><td>7</td><td>Criar estrutura do projeto, dependências e serviço BigQuery</td><td>Eu</td><td><span class="pill ok">Concluído</span></td></tr>
+      <tr><td>8</td><td>Escrever os 4 arquivos YAML e testes da camada semântica</td><td>Eu</td><td><span class="pill ok">Concluído</span></td></tr>
+      <tr><td>9</td><td>Implementar ferramentas, integração OpenAI e fluxo de resposta</td><td>Eu</td><td><span class="pill ok">Concluído — 26 testes</span></td></tr>
+      <tr><td>10</td><td>Construir interface, gráficos e histórico de sessão</td><td>Eu</td><td><span class="pill ok">Concluído</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note warn">
+    Não há mais bloqueio técnico de permissão no BigQuery: a conta de serviço já consegue criar jobs e ler o dataset <code>gold_clau</code>.
+  </div>
+</section>
+
+<section>
+  <h2>6. Critérios de conclusão do MVP</h2>
+  <ul class="checklist">
+    <li><input type="checkbox" checked> Aplicação conectada ao BigQuery e à camada Gold (validado na Fase 1; implementação na Fase 2)</li>
+    <li><input type="checkbox"> OpenAI interpreta perguntas em linguagem natural</li>
+    <li><input type="checkbox"> Function Calling aciona as ferramentas corretamente</li>
+    <li><input type="checkbox"> Ferramentas retornam dados reais</li>
+    <li><input type="checkbox"> Respostas sobre faturamento, vendas, ticket médio e rankings</li>
+    <li><input type="checkbox"> Comparações temporais quando houver dados suficientes</li>
+    <li><input type="checkbox"> Tabelas e gráficos apresentados</li>
+    <li><input type="checkbox"> Credenciais protegidas</li>
+    <li><input type="checkbox"> Projeto pronto para deploy no Streamlit Community Cloud</li>
+  </ul>
+  <p>O item 1 aparece marcado porque a conectividade e o acesso aos dados foram comprovados nesta Fase 1; a implementação do serviço de conexão ainda é a primeira tarefa da Fase 2.</p>
+</section>
+
+<section>
+  <h2>7. Próximos passos imediatos</h2>
+  <ol>
+    <li>Fases 1, 2 e 3 concluídas e documentadas.</li>
+    <li>A camada semântica contém schema real, 9 métricas, 28 dimensões e 18 regras de negócio.</li>
+    <li>Fase 4 implementada com Responses API, Function Calling e as 5 ferramentas <code>get_kpi</code>, <code>get_ranking</code>, <code>compare_periods</code>, <code>get_trend</code> e <code>get_filtered_data</code>.</li>
+    <li>Fase 5 implementada: <code>streamlit_app.py</code>, 4 páginas, cards, gráficos Plotly, tabelas, histórico e rastreamento de qualidade.</li>
+    <li>Pendente: revogar a chave exposta, configurar chave nova via Secrets/env e criar o dataset <code>analytics_ops</code> com as tabelas de eventos e feedback.</li>
+    <li>Próximo: Fase 6 — GitHub, Secrets e deploy no Streamlit Community Cloud.</li>
+  </ol>
+</section>
+
+<footer>Roadmap consolidado · nenhuma credencial incluída · baseado no prompt do MVP e nas validações reais da Fase 1.</footer>
+</main>
+</body>
+</html>
