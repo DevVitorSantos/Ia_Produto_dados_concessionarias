@@ -56,7 +56,7 @@ O smoke test valida conexão, objetos Gold, contagem de vendas, faturamento por 
 
 ## Rastreamento de qualidade
 
-O Chat IA salva eventos de busca e notas de satisfatória, dúvidas ou resultado errado no BigQuery. A página **Qualidade** mostra buscas repetidas e problemas por assunto. Detalhes em `docs/qualidade_rastreamento.md`.
+O Chat IA salva eventos de busca e notas de satisfatória, dúvidas ou resultado errado no BigQuery. A view `analytics_ops.vw_chat_interactions` traz uma linha por evento com a última nota já achatada, facilitando consultas no Console. A página **Qualidade** mostra buscas repetidas e problemas por assunto. Detalhes em `docs/qualidade_rastreamento.md`.
 
 Antes do primeiro uso, crie o dataset `analytics_ops` com uma credencial que tenha permissão de criação:
 

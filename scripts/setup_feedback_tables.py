@@ -12,7 +12,7 @@ from services.feedback_store import FeedbackStore
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Cria o dataset analytics_ops e as tabelas de eventos e feedback."
+        description="Cria o dataset analytics_ops, as tabelas de eventos/feedback e a view de leitura."
     )
     parser.add_argument("--dataset", default=None, help="Dataset de destino; padrão analytics_ops.")
     parser.add_argument(
@@ -27,7 +27,10 @@ def main() -> None:
 
     store = FeedbackStore(dataset_id=args.dataset)
     store.ensure_tables()
-    print(f"Dataset/tabelas prontos: {store.events_table_id()} e {store.feedback_table_id()}")
+    print(
+        f"Dataset/tabelas prontos: {store.events_table_id()} e {store.feedback_table_id()}. "
+        f"View pronta: {store.view_id()}"
+    )
 
 
 if __name__ == "__main__":

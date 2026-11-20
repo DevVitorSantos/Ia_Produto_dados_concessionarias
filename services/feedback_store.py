@@ -16,6 +16,7 @@ from services.bigquery_service import BigQueryService, BigQueryServiceError
 
 EVENTS_TABLE = "chat_events"
 FEEDBACK_TABLE = "chat_feedback"
+INTERACTIONS_VIEW = "vw_chat_interactions"
 VALID_RATINGS = ("satisfatoria", "duvidas", "resultado_errado")
 
 EVENT_SCHEMA = (
@@ -101,6 +102,61 @@ class FeedbackStore:
     def feedback_table_id(self) -> str:
         return f"{self.settings.project_id}.{self.dataset_id}.{FEEDBACK_TABLE}"
 
+    def view_id(self) -> str:
+        return f"{self.settings.project_id}.{self.dataset_id}.{INTERACTIONS_VIEW}"
+
+    def view_query(self) -> str:
+        events = self._qualified_table(EVENTS_TABLE)
+        feedback = self._qualified_table(FEEDBACK_TABLE)
+        return f"""
+        WITH notas AS (
+          SELECT
+            event_id,
+            feedback_id,
+            created_at AS feedback_created_at,
+            rating,
+            comment,
+            COUNT(*) OVER (PARTITION BY event_id) AS feedback_count,
+            ROW_NUMBER() OVER (
+              PARTITION BY event_id ORDER BY created_at DESC, feedback_id DESC
+            ) AS rn
+          FROM {feedback}
+        )
+        SELECT
+          e.event_id,
+          e.created_at AS event_created_at,
+          e.session_id,
+          e.question,
+          e.question_hash,
+          e.subject,
+          e.subject_hash,
+          e.tools_used,
+          e.response_ms,
+          e.repeat_count,
+          e.status,
+          e.model,
+          n.feedback_id,
+          n.feedback_created_at,
+          n.rating,
+          n.comment,
+          COALESCE(n.feedback_count, 0) AS feedback_count,
+          n.feedback_id IS NOT NULL AS tem_feedback
+        FROM {events} AS e
+        LEFT JOIN notas AS n ON n.event_id = e.event_id AND n.rn = 1
+        """.strip()
+
+    def create_view_sql(self) -> str:
+        return f"CREATE OR REPLACE VIEW `{self.view_id()}` AS\n{self.view_query()}"
+
+    def ensure_view(self) -> None:
+        try:
+            self.setup_client.query(self.create_view_sql()).result()
+        except (GoogleAPIError, GoogleAuthError, AttributeError) as exc:
+            raise FeedbackStoreError(
+                f"Não foi possível criar a view {self.view_id()}. "
+                "Confirme permissão de criação de tabelas/views no dataset."
+            ) from exc
+
     def _qualified_table(self, name: str) -> str:
         return f"`{self.settings.project_id}.{self.dataset_id}.{name}`"
 
@@ -174,6 +230,7 @@ class FeedbackStore:
             bigquery.Table(dataset.table(FEEDBACK_TABLE), schema=list(FEEDBACK_SCHEMA)),
             exists_ok=True,
         )
+        self.ensure_view()
 
     def save_event(
         self,

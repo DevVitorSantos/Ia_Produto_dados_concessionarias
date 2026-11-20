@@ -28,6 +28,34 @@ class MissingTableClient(FakeClient):
         raise NotFound("table missing")
 
 
+class FakeResult:
+    def result(self) -> None:
+        return None
+
+
+class FakeSetupClient:
+    def __init__(self) -> None:
+        self.queries: list[str] = []
+        self.created_tables: list[object] = []
+
+    def dataset(self, dataset_id: str) -> "FakeSetupClient":
+        return self
+
+    def table(self, name: str) -> str:
+        return f"p.d.{name}"
+
+    def create_dataset(self, dataset: object, exists_ok: bool = False) -> object:
+        return dataset
+
+    def create_table(self, table: object, exists_ok: bool = False) -> object:
+        self.created_tables.append(table)
+        return table
+
+    def query(self, sql: str) -> FakeResult:
+        self.queries.append(sql)
+        return FakeResult()
+
+
 class FakeBigQueryService:
     def __init__(self, responses: list[list[dict]]) -> None:
         self.responses = responses
@@ -167,3 +195,19 @@ def test_quality_report_queries_events_and_feedback() -> None:
     assert len(fake_service.sqls) == 3
     assert "analytics_ops.chat_events" in fake_service.sqls[0]
     assert "analytics_ops.chat_feedback" in fake_service.sqls[1]
+
+
+def test_ensure_tables_creates_interactions_view() -> None:
+    setup_client = FakeSetupClient()
+    store = FeedbackStore(settings=_settings(), dataset_id="d")
+    store._setup_client = setup_client
+
+    store.ensure_tables()
+
+    assert len(setup_client.created_tables) == 2
+    assert len(setup_client.queries) == 1
+    sql = setup_client.queries[0]
+    assert sql.startswith("CREATE OR REPLACE VIEW `p.d.vw_chat_interactions` AS")
+    assert "COALESCE(n.feedback_count, 0) AS feedback_count" in sql
+    assert "n.feedback_id IS NOT NULL AS tem_feedback" in sql
+    assert "n.rn = 1" in sql

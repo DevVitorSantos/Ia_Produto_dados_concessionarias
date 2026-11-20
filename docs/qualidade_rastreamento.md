@@ -2,7 +2,7 @@
 
 Este módulo registra eventos de uso do Chat IA e as notas dadas pelo usuário para identificar quais buscas são repetidas e quais respostas geraram dúvida ou erro.
 
-## Tabelas
+## Tabelas e view
 
 Dataset padrão: `analytics_ops`. Nome alterável por `FEEDBACK_DATASET`.
 
@@ -33,6 +33,26 @@ Dataset padrão: `analytics_ops`. Nome alterável por `FEEDBACK_DATASET`.
 | `session_id` | STRING | Sessão do usuário. |
 | `rating` | STRING | `satisfatoria`, `duvidas` ou `resultado_errado`. |
 | `comment` | STRING | Comentário opcional. |
+
+### `vw_chat_interactions`
+
+View de leitura criada sobre as duas tabelas. Ela mantém uma linha por evento e traz a última nota dada ao `event_id`, além de `feedback_count` e `tem_feedback`.
+
+| Coluna | Origem | Descrição |
+| --- | --- | --- |
+| `event_id`, `event_created_at`, `session_id`, `question`, `question_hash`, `subject`, `subject_hash`, `tools_used`, `response_ms`, `repeat_count`, `status`, `model` | `chat_events` | Dados da interação. |
+| `feedback_id`, `feedback_created_at`, `rating`, `comment` | `chat_feedback` | Última nota do evento. |
+| `feedback_count` | calculado | Total de notas registradas para o evento. |
+| `tem_feedback` | calculado | `TRUE` quando o evento possui pelo menos uma nota. |
+
+Exemplo no BigQuery:
+
+```sql
+SELECT event_created_at, subject, question, rating, feedback_count
+FROM `projeto-dev-410722.analytics_ops.vw_chat_interactions`
+ORDER BY event_created_at DESC
+LIMIT 50
+```
 
 ## Permissões
 
