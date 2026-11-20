@@ -12,6 +12,53 @@ ANSWERS_KEY = "chat_answers"
 PENDING_KEY = "pending_prompt"
 SESSION_KEY = "chat_session_id"
 FEEDBACK_KEY = "chat_feedback"
+FILTER_KEY = "conversation_filter"
+
+FILTER_DIMENSIONS = (
+    "data",
+    "concessionaria",
+    "cidade",
+    "estado",
+    "vendedor",
+    "modelo",
+    "categoria_desconto",
+    "faixa_preco",
+)
+
+
+def build_conversation_filter(
+    dimension: str,
+    value: Any,
+    operator: str = "=",
+) -> dict[str, Any] | None:
+    dimension_name = str(dimension or "").strip()
+    if not dimension_name:
+        return None
+    normalized_operator = str(operator or "=").strip().upper()
+
+    if normalized_operator == "BETWEEN":
+        if not isinstance(value, (list, tuple)) or len(value) != 2:
+            return None
+        start, end = value
+        if start in (None, "") or end in (None, ""):
+            return None
+        start_text, end_text = str(start).strip(), str(end).strip()
+        if start_text > end_text:
+            return None
+        return {
+            "dimension": dimension_name,
+            "operator": "BETWEEN",
+            "value": [start_text, end_text],
+        }
+
+    text = str(value or "").strip()
+    if not text:
+        return None
+    return {
+        "dimension": dimension_name,
+        "operator": normalized_operator,
+        "value": text,
+    }
 
 
 def init_state() -> None:
@@ -20,6 +67,22 @@ def init_state() -> None:
     st.session_state.setdefault(PENDING_KEY, None)
     st.session_state.setdefault(SESSION_KEY, str(uuid.uuid4()))
     st.session_state.setdefault(FEEDBACK_KEY, {})
+    st.session_state.setdefault(FILTER_KEY, None)
+
+
+def conversation_filter() -> dict[str, Any] | None:
+    init_state()
+    value = st.session_state.get(FILTER_KEY)
+    return value if isinstance(value, dict) else None
+
+
+def set_conversation_filter(value: dict[str, Any] | None) -> None:
+    init_state()
+    st.session_state[FILTER_KEY] = value
+
+
+def clear_conversation_filter() -> None:
+    set_conversation_filter(None)
 
 
 def clear_conversation() -> None:

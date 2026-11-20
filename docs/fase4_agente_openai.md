@@ -65,13 +65,15 @@ O agente deve encerrar toda resposta com um único objeto JSON válido, sem Mark
 
 O serviço aceita o JSON com ou sem cercas de código e mantém compatibilidade com respostas antigas em texto simples. Quando o modelo não fornece sugestões, o `ResponseService` cria sugestões padrão compatíveis com as ferramentas disponíveis.
 
+Quando há filtro persistente ativo na conversa, o `OpenAIService` injeta o recorte nos argumentos das ferramentas e reforça nas instruções que o agente não deve substituí-lo. Para datas, o intervalo é enviado como `start_date`/`end_date` em `get_kpi`, `get_ranking` e `get_trend`; nas demais ferramentas, o filtro `BETWEEN` entra na lista `filters`.
+
 ## Testes
 
 ```powershell
 .venv/Scripts/python -m pytest -q
 ```
 
-Resultado: 26 testes aprovados.
+Resultado: 53 testes aprovados.
 
 Smoke test real, após configurar a chave rotacionada:
 

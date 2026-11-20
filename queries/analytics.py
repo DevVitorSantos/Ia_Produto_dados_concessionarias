@@ -12,7 +12,7 @@ from semantic_layer.loader import get_dimension, get_metric, get_schema, primary
 if TYPE_CHECKING:
     from services.bigquery_service import BigQueryService
 
-_ALLOWED_OPERATORS = {"=", "!=", ">", ">=", "<", "<=", "IN", "NOT IN"}
+_ALLOWED_OPERATORS = {"=", "!=", ">", ">=", "<", "<=", "IN", "NOT IN", "BETWEEN"}
 _GRANULARITIES = {
     "dia": "data",
     "mes": "ano_mes",
@@ -133,7 +133,23 @@ class AnalyticsQueries:
             sql_type = _sql_type(declared_type)
             value = item.get("value")
 
-            if operator in {"IN", "NOT IN"}:
+            if operator == "BETWEEN":
+                if not isinstance(value, (list, tuple)) or len(value) != 2:
+                    raise AnalyticsError("Filtro BETWEEN exige exatamente dois valores.")
+                start_name = f"f{index}_inicio"
+                end_name = f"f{index}_fim"
+                clauses.append(f"{column} BETWEEN @{start_name} AND @{end_name}")
+                parameters.append(
+                    bigquery.ScalarQueryParameter(
+                        start_name, sql_type, _convert_value(value[0], declared_type)
+                    )
+                )
+                parameters.append(
+                    bigquery.ScalarQueryParameter(
+                        end_name, sql_type, _convert_value(value[1], declared_type)
+                    )
+                )
+            elif operator in {"IN", "NOT IN"}:
                 if not isinstance(value, list) or not value:
                     raise AnalyticsError(f"Filtro {operator} exige uma lista de valores.")
                 placeholders = []

@@ -2,25 +2,32 @@ from __future__ import annotations
 
 import time
 import uuid
+from datetime import date
 from typing import Any
 
 import streamlit as st
 
 from config import get_secret
+from semantic_layer.loader import get_dimensions
 from services.feedback_store import FeedbackStore, FeedbackStoreError
-from services.openai_service import DEFAULT_MODEL, OpenAIService
+from services.openai_service import DEFAULT_MODEL, OpenAIService, describe_filter
 from services.search_classifier import classify_subject, question_hash, subject_hash
 from ui.components import render_suggestions, render_tool_results
 from ui.state import (
     FEEDBACK_KEY,
+    FILTER_DIMENSIONS,
     PENDING_KEY,
     SESSION_KEY,
+    build_conversation_filter,
     clear_conversation,
+    clear_conversation_filter,
+    conversation_filter,
     history_for_api,
     init_state,
     record_feedback,
     record_message,
     repeat_count_for,
+    set_conversation_filter,
 )
 
 st.set_page_config(page_title="Chat IA", page_icon="C", layout="wide")
@@ -29,6 +36,9 @@ st.caption("Perguntas em linguagem natural sobre vendas, faturamento, descontos 
 
 init_state()
 FEEDBACK_STORE = FeedbackStore()
+active_filter = conversation_filter()
+if active_filter:
+    st.caption(f"Filtro persistente nesta conversa: **{describe_filter(active_filter)}**")
 
 SUGGESTIONS = [
     "Qual foi o faturamento total?",
@@ -45,6 +55,55 @@ RATINGS = (
 
 def _apply_suggestion(question: str) -> None:
     st.session_state[PENDING_KEY] = question
+
+
+def _render_conversation_filter() -> dict[str, Any] | None:
+    active = conversation_filter()
+    if active:
+        st.caption(f"Ativo: **{describe_filter(active)}**")
+        if st.button("Remover filtro", key="remove_conversation_filter", width="stretch"):
+            clear_conversation_filter()
+            st.rerun()
+
+    dimensions = get_dimensions()["dimensions"]
+    dimension = st.selectbox(
+        "Dimensão",
+        options=FILTER_DIMENSIONS,
+        key="conversation_filter_dimension",
+        format_func=lambda key: str(dimensions.get(key, {}).get("label", key)),
+    )
+    if dimension == "data":
+        period = st.date_input(
+            "Período",
+            value=(date(2025, 1, 1), date(2026, 7, 2)),
+            key="conversation_filter_period",
+        )
+        if isinstance(period, (tuple, list)) and len(period) == 2:
+            start, end = period
+        elif isinstance(period, date):
+            start = end = period
+        else:
+            start = end = None
+        raw_value = [start.isoformat(), end.isoformat()] if start and end else []
+        operator = "BETWEEN"
+    else:
+        raw_value = st.text_input("Valor", key="conversation_filter_value")
+        operator = "="
+
+    st.caption("Aplica às próximas perguntas; um novo filtro substitui o anterior.")
+    if st.button(
+        "Aplicar à conversa",
+        type="primary",
+        key="apply_conversation_filter",
+        width="stretch",
+    ):
+        built = build_conversation_filter(dimension, raw_value, operator)
+        if built is None:
+            st.warning("Informe um valor válido para aplicar o filtro.")
+        else:
+            set_conversation_filter(built)
+            st.rerun()
+    return active
 
 
 def _render_feedback(event_id: str) -> None:
@@ -147,6 +206,9 @@ def _save_event(
 
 
 with st.sidebar:
+    st.header("Filtro persistente")
+    _render_conversation_filter()
+    st.divider()
     st.header("Sugestões iniciais")
     columns = st.columns(1)
     for suggestion in SUGGESTIONS:
@@ -182,7 +244,11 @@ if prompt:
 
     try:
         with st.spinner("Consultando os dados..."):
-            answer = OpenAIService().ask(prompt, history=history)
+            answer = OpenAIService().ask(
+                prompt,
+                history=history,
+                persistent_filter=active_filter,
+            )
     except RuntimeError as exc:
         message = str(exc)
         if "OPENAI_API_KEY" in message:

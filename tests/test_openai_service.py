@@ -4,10 +4,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from agent.instructions import INSTRUCTIONS
+from agent.instructions import INSTRUCTIONS, build_instructions
 from agent.tools import tool_schemas
 from queries.analytics import AnalyticsError, AnalyticsQueries
-from services.openai_service import OpenAIService
+from services.openai_service import OpenAIService, describe_filter
 from services.response_service import ResponseService
 
 
@@ -82,6 +82,8 @@ def test_tool_schemas_expose_five_official_tools() -> None:
     assert all(item["type"] == "function" for item in schemas)
     assert all(item["strict"] is False for item in schemas)
     assert "faturamento_total" in schemas[0]["parameters"]["properties"]["metric"]["enum"]
+    filter_operators = schemas[0]["parameters"]["properties"]["filters"]["items"]["properties"]["operator"]["enum"]
+    assert "BETWEEN" in filter_operators
 
 
 def test_instructions_contain_critical_business_rules() -> None:
@@ -92,6 +94,31 @@ def test_instructions_contain_critical_business_rules() -> None:
     assert "sugestoes" in INSTRUCTIONS
     assert "objeto JSON válido" in INSTRUCTIONS
     assert "menor número possível de chamadas" in INSTRUCTIONS
+
+
+def test_instructions_include_persistent_filter_context() -> None:
+    instructions = build_instructions("Concessionária = Sul")
+
+    assert "Filtro persistente da conversa: Concessionária = Sul" in instructions
+    assert "não tente substituí-lo" in instructions
+
+
+def test_describe_filter_formats_dimension_label_and_range() -> None:
+    assert (
+        describe_filter({"dimension": "concessionaria", "operator": "=", "value": "Sul"})
+        == "Concessionária = Sul"
+    )
+    assert (
+        describe_filter(
+            {
+                "dimension": "data",
+                "operator": "BETWEEN",
+                "value": ["2025-01-01", "2026-07-02"],
+            }
+        )
+        == "Data da venda entre 2025-01-01 e 2026-07-02"
+    )
+    assert describe_filter(None) == ""
 
 
 def test_openai_service_parses_structured_sections_and_suggestions() -> None:
@@ -111,6 +138,87 @@ def test_openai_service_parses_structured_sections_and_suggestions() -> None:
     assert answer.secoes.prova == "Tabela com os valores usados no gráfico."
     assert answer.secoes.sugestoes[0]["rotulo"] == "Ver ranking"
     assert answer.to_dict()["secoes"]["sugestoes"] == answer.secoes.sugestoes
+
+
+def test_openai_service_applies_persistent_filter_to_tool_arguments() -> None:
+    call = FakeItem(
+        type="function_call",
+        name="get_kpi",
+        arguments=(
+            '{"metric": "faturamento_total", "filters": ['
+            '{"dimension": "concessionaria", "operator": "=", "value": "Norte"}]}'
+        ),
+        call_id="call_1",
+    )
+    message = FakeItem(type="message", content=[], id="msg_1")
+    client = FakeClient([_response(call, text=""), _response(message, text="Ok")])
+    executor = FakeExecutor('{"metrica": "faturamento_total", "valor": 100.0}')
+    service = OpenAIService(tool_executor=executor, client=client, model="test-model")
+
+    service.ask(
+        "Qual foi o faturamento?",
+        persistent_filter={"dimension": "concessionaria", "operator": "=", "value": "Sul"},
+    )
+
+    assert executor.calls[0][1]["filters"] == [
+        {"dimension": "concessionaria", "operator": "=", "value": "Sul"}
+    ]
+    assert "Concessionária = Sul" in client.responses.calls[0]["instructions"]
+
+
+def test_openai_service_maps_date_filter_to_period_arguments() -> None:
+    call = FakeItem(
+        type="function_call",
+        name="get_trend",
+        arguments=(
+            '{"metric": "faturamento_total", "granularity": "mes", '
+            '"start_date": "2024-01-01"}'
+        ),
+        call_id="call_1",
+    )
+    message = FakeItem(type="message", content=[], id="msg_1")
+    client = FakeClient([_response(call, text=""), _response(message, text="Ok")])
+    executor = FakeExecutor('{"metrica": "faturamento_total", "valor": 100.0}')
+    service = OpenAIService(tool_executor=executor, client=client, model="test-model")
+
+    service.ask(
+        "Como o faturamento evoluiu?",
+        persistent_filter={
+            "dimension": "data",
+            "operator": "BETWEEN",
+            "value": ["2025-01-01", "2026-07-02"],
+        },
+    )
+
+    assert executor.calls[0][1]["start_date"] == "2025-01-01"
+    assert executor.calls[0][1]["end_date"] == "2026-07-02"
+    assert "filters" not in executor.calls[0][1]
+
+
+def test_openai_service_keeps_date_filter_on_compare_periods() -> None:
+    persistent_filter = {
+        "dimension": "data",
+        "operator": "BETWEEN",
+        "value": ["2025-01-01", "2026-07-02"],
+    }
+    call = FakeItem(
+        type="function_call",
+        name="compare_periods",
+        arguments=(
+            '{"metric": "faturamento_total", "current_start": "2026-01-01", '
+            '"current_end": "2026-06-30", "previous_start": "2025-01-01", '
+            '"previous_end": "2025-06-30"}'
+        ),
+        call_id="call_1",
+    )
+    message = FakeItem(type="message", content=[], id="msg_1")
+    client = FakeClient([_response(call, text=""), _response(message, text="Ok")])
+    executor = FakeExecutor('{"metrica": "faturamento_total", "valor": 100.0}')
+    service = OpenAIService(tool_executor=executor, client=client, model="test-model")
+
+    service.ask("Compare os períodos.", persistent_filter=persistent_filter)
+
+    assert executor.calls[0][1]["filters"] == [persistent_filter]
 
 
 def test_openai_service_runs_function_call_until_final_answer() -> None:
@@ -180,6 +288,28 @@ def test_analytics_builds_parameterized_query() -> None:
     assert "vendedor = @f0" in fake_service.sql
     parameters = {item.name: item.value for item in fake_service.parameters}
     assert parameters["f0"] == "João"
+
+
+def test_analytics_builds_between_date_filter() -> None:
+    fake_service = FakeBigQueryService([{"valor": 100}])
+    analytics = AnalyticsQueries(service=fake_service)
+
+    result = analytics.get_kpi(
+        "faturamento_total",
+        filters=[
+            {
+                "dimension": "data",
+                "operator": "BETWEEN",
+                "value": ["2025-01-01", "2025-12-31"],
+            }
+        ],
+    )
+
+    assert result["valor"] == 100
+    assert "data BETWEEN @f0_inicio AND @f0_fim" in fake_service.sql
+    parameters = {item.name: item.value for item in fake_service.parameters}
+    assert parameters["f0_inicio"].isoformat() == "2025-01-01"
+    assert parameters["f0_fim"].isoformat() == "2025-12-31"
 
 
 def test_analytics_rejects_unknown_metric_and_operator() -> None:

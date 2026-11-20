@@ -45,6 +45,8 @@ A página de Indicadores usa a credencial BigQuery já prevista nas Fases 1 e 2.
 - até 3 tabelas na seção `Prova`, com aviso quando houver mais resultados disponíveis;
 - tabela de referência sempre visível na seção `Prova`;
 - botões de sugestão que disparam uma nova busca ao serem clicados, inclusive no histórico;
+- filtro persistente na sidebar: uma dimensão por conversa, aplicada automaticamente às próximas perguntas até ser substituída ou removida;
+- datas no filtro persistente usam intervalo `BETWEEN`; para `get_kpi`, `get_ranking` e `get_trend`, o intervalo é enviado como `start_date`/`end_date`;
 - sugestões iniciais na sidebar;
 - cards com as métricas oficiais;
 - gráficos Plotly para evolução mensal, ranking e comparação de períodos;
@@ -61,7 +63,7 @@ A página de Indicadores usa a credencial BigQuery já prevista nas Fases 1 e 2.
 
 ## Validação
 
-- testes automatizados do projeto: 46 aprovados após o formato estruturado de resposta e o rastreamento de qualidade;
+- testes automatizados do projeto: 53 aprovados após o filtro persistente, o formato estruturado de resposta e o rastreamento de qualidade;
 - `compileall` e `git diff --check` executados ao final;
 - validação local no navegador: Home, Indicadores, Chat IA e Histórico renderizaram sem erros de console;
 - Indicadores carregou KPIs reais do BigQuery: R$ 3.444.157.639,69, 7.720 vendas e R$ 446.134,41 de ticket médio;

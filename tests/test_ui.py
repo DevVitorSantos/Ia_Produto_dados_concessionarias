@@ -9,6 +9,7 @@ from ui.charts import (
     trend_figure,
 )
 from ui.format import format_metric, format_value, metric_label
+from ui.state import build_conversation_filter
 
 
 def test_format_value_brazilian_outputs() -> None:
@@ -157,3 +158,23 @@ def test_render_tool_results_assigns_unique_plotly_keys(monkeypatch) -> None:
     )
 
     assert keys == ["answer-event-0", "answer-event-1"]
+
+
+def test_build_conversation_filter_normalizes_values() -> None:
+    assert build_conversation_filter("concessionaria", " Sul ") == {
+        "dimension": "concessionaria",
+        "operator": "=",
+        "value": "Sul",
+    }
+    assert build_conversation_filter(
+        "data",
+        ["2025-01-01", "2025-12-31"],
+        "BETWEEN",
+    ) == {
+        "dimension": "data",
+        "operator": "BETWEEN",
+        "value": ["2025-01-01", "2025-12-31"],
+    }
+    assert build_conversation_filter("cidade", "") is None
+    assert build_conversation_filter("data", [], "BETWEEN") is None
+    assert build_conversation_filter("data", ["2026-01-01", "2025-01-01"], "BETWEEN") is None

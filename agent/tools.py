@@ -9,7 +9,7 @@ from semantic_layer.loader import get_dimensions, get_metrics, primary_table_col
 _METRICS = sorted(get_metrics()["metrics"])
 _DIMENSIONS = sorted(get_dimensions()["dimensions"])
 _COLUMNS = sorted(primary_table_columns())
-_OPERATORS = ["=", "!=", ">", ">=", "<", "<=", "IN", "NOT IN"]
+_OPERATORS = ["=", "!=", ">", ">=", "<", "<=", "IN", "NOT IN", "BETWEEN"]
 
 
 def _filter_schema() -> dict[str, Any]:
