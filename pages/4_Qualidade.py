@@ -5,8 +5,10 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from services.feedback_store import FeedbackStore, FeedbackStoreError
+from ui.profile_popup import render_profile_popup
 
 st.set_page_config(page_title="Qualidade", page_icon="Q", layout="wide")
+render_profile_popup()
 st.title("Qualidade e repetição das buscas")
 st.caption("Análise de buscas repetidas e notas dadas pelo usuário nas respostas do Chat IA.")
 

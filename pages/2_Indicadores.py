@@ -10,8 +10,10 @@ from queries.analytics import AnalyticsQueries
 from semantic_layer.loader import get_dimensions, get_metrics
 from ui.charts import build_figure
 from ui.components import render_metric_cards
+from ui.profile_popup import render_profile_popup
 
 st.set_page_config(page_title="Indicadores", page_icon="I", layout="wide")
+render_profile_popup()
 st.title("Indicadores")
 st.caption("KPIs oficiais calculados diretamente da view Gold, sem SQL livre.")
 

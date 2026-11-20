@@ -13,6 +13,9 @@ PENDING_KEY = "pending_prompt"
 SESSION_KEY = "chat_session_id"
 FEEDBACK_KEY = "chat_feedback"
 FILTER_KEY = "conversation_filter"
+PROFILE_KEY = "user_profile"
+PROFILE_COOKIE_KEY = "user_profile_cookie"
+PROFILE_EDIT_KEY = "user_profile_edit"
 
 FILTER_DIMENSIONS = (
     "data",
@@ -68,6 +71,9 @@ def init_state() -> None:
     st.session_state.setdefault(SESSION_KEY, str(uuid.uuid4()))
     st.session_state.setdefault(FEEDBACK_KEY, {})
     st.session_state.setdefault(FILTER_KEY, None)
+    st.session_state.setdefault(PROFILE_KEY, None)
+    st.session_state.setdefault(PROFILE_COOKIE_KEY, None)
+    st.session_state.setdefault(PROFILE_EDIT_KEY, False)
 
 
 def conversation_filter() -> dict[str, Any] | None:

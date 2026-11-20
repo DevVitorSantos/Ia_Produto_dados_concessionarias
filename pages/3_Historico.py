@@ -3,9 +3,11 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from ui.profile_popup import render_profile_popup
 from ui.state import clear_conversation, init_state
 
 st.set_page_config(page_title="Histórico", page_icon="H", layout="wide")
+render_profile_popup()
 st.title("Histórico da sessão")
 st.caption("Perguntas, respostas e ferramentas utilizadas durante esta sessão.")
 

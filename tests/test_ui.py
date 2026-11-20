@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import MappingProxyType, SimpleNamespace
+
 from ui import components
 from ui.charts import (
     build_combined_figure,
@@ -9,6 +11,8 @@ from ui.charts import (
     trend_figure,
 )
 from ui.format import format_metric, format_value, metric_label
+from ui import profile_popup
+from ui.profile_popup import PROFILE_COOKIE, build_cookie_script
 from ui.state import build_conversation_filter
 
 
@@ -178,3 +182,36 @@ def test_build_conversation_filter_normalizes_values() -> None:
     assert build_conversation_filter("cidade", "") is None
     assert build_conversation_filter("data", [], "BETWEEN") is None
     assert build_conversation_filter("data", ["2026-01-01", "2025-01-01"], "BETWEEN") is None
+
+
+def test_profile_cookie_script_expires_in_seven_days() -> None:
+    script = build_cookie_script("profile-123")
+    assert PROFILE_COOKIE in script
+    assert "Max-Age=604800" in script
+    assert "profile-123" in script
+    assert "SameSite=Lax" in script
+
+
+def test_read_cookie_accepts_mapping_proxy(monkeypatch) -> None:
+    fake_st = SimpleNamespace(
+        context=SimpleNamespace(
+            cookies=MappingProxyType({PROFILE_COOKIE: "profile-123"})
+        )
+    )
+    monkeypatch.setattr(profile_popup, "st", fake_st)
+
+    assert profile_popup._read_cookie() == "profile-123"
+
+
+def test_cookie_iframe_uses_positive_dimensions(monkeypatch) -> None:
+    captured: list[dict[str, object]] = []
+
+    def fake_iframe(html: str, **kwargs: object) -> None:
+        captured.append({"html": html, **kwargs})
+
+    fake_st = SimpleNamespace(iframe=fake_iframe)
+    monkeypatch.setattr(profile_popup, "st", fake_st)
+
+    profile_popup._render_iframe("<script></script>")
+
+    assert captured == [{"html": "<script></script>", "height": 1, "width": 1}]

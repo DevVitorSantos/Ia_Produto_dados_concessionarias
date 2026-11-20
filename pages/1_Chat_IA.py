@@ -13,6 +13,7 @@ from services.feedback_store import FeedbackStore, FeedbackStoreError
 from services.openai_service import DEFAULT_MODEL, OpenAIService, describe_filter
 from services.search_classifier import classify_subject, question_hash, subject_hash
 from ui.components import render_suggestions, render_tool_results
+from ui.profile_popup import render_profile_popup
 from ui.state import (
     FEEDBACK_KEY,
     FILTER_DIMENSIONS,
@@ -31,6 +32,7 @@ from ui.state import (
 )
 
 st.set_page_config(page_title="Chat IA", page_icon="C", layout="wide")
+render_profile_popup()
 st.title("Chat IA")
 st.caption("Perguntas em linguagem natural sobre vendas, faturamento, descontos e rankings.")
 

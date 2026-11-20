@@ -1,11 +1,15 @@
 import streamlit as st
 
+from ui.profile_popup import render_profile_popup
+
 st.set_page_config(
     page_title="AI Analytics Assistant — Concessionárias",
     page_icon="A",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+render_profile_popup()
 
 st.title("AI Analytics Assistant — Concessionárias")
 st.subheader("Análise de vendas com linguagem natural sobre a camada Gold do BigQuery")
