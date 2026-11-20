@@ -32,7 +32,7 @@ from ui.state import (
 )
 
 st.set_page_config(page_title="Chat IA", page_icon="C", layout="wide")
-render_profile_popup()
+USER_PROFILE = render_profile_popup() or {}
 st.title("Chat IA")
 st.caption("Perguntas em linguagem natural sobre vendas, faturamento, descontos e rankings.")
 
@@ -126,6 +126,7 @@ def _render_feedback(event_id: str) -> None:
                     event_id=event_id,
                     session_id=st.session_state[SESSION_KEY],
                     rating=value,
+                    user_profile=USER_PROFILE,
                 )
                 record_feedback(event_id, value)
                 st.success(f"Registrado: {label}.")
@@ -204,6 +205,7 @@ def _save_event(
         repeat_count=repeat_count,
         status=status,
         model=model,
+        user_profile=USER_PROFILE,
     )
 
 

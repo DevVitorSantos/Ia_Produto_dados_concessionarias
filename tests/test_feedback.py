@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 from google.api_core.exceptions import NotFound
+from google.cloud import bigquery
 
 from config import Settings
 from services.feedback_store import FeedbackStore, FeedbackStoreError
@@ -37,6 +38,8 @@ class FakeSetupClient:
     def __init__(self) -> None:
         self.queries: list[str] = []
         self.created_tables: list[object] = []
+        self.tables: dict[str, object] = {}
+        self.updated_tables: list[object] = []
 
     def dataset(self, dataset_id: str) -> "FakeSetupClient":
         return self
@@ -49,6 +52,15 @@ class FakeSetupClient:
 
     def create_table(self, table: object, exists_ok: bool = False) -> object:
         self.created_tables.append(table)
+        return table
+
+    def get_table(self, table_id: str) -> object:
+        if table_id not in self.tables:
+            raise NotFound("table missing")
+        return self.tables[table_id]
+
+    def update_table(self, table: object, fields: list[str]) -> object:
+        self.updated_tables.append(table)
         return table
 
     def query(self, sql: str) -> FakeResult:
@@ -112,12 +124,22 @@ def test_save_event_uses_events_table_and_generated_id() -> None:
         repeat_count=2,
         status="sucesso",
         model="gpt-6-luna",
+        user_profile={
+            "nome": "Ana Silva",
+            "email": "ana@example.com",
+            "cargo": "Analista",
+            "setor": "Vendas",
+        },
     )
 
     table_id, rows, row_ids = client.calls[0]
     assert table_id == "p.analytics_ops.chat_events"
     assert rows[0]["event_id"] == event_id
     assert rows[0]["repeat_count"] == 2
+    assert rows[0]["nome"] == "Ana Silva"
+    assert rows[0]["email"] == "ana@example.com"
+    assert rows[0]["cargo"] == "Analista"
+    assert rows[0]["setor"] == "Vendas"
     assert row_ids == [event_id]
 
 
@@ -168,12 +190,24 @@ def test_save_feedback_validates_rating() -> None:
         store.save_feedback(event_id="e1", session_id="s1", rating="otimo")
 
     feedback_id = store.save_feedback(
-        event_id="e1", session_id="s1", rating="resultado_errado"
+        event_id="e1",
+        session_id="s1",
+        rating="resultado_errado",
+        user_profile={
+            "nome": "Ana Silva",
+            "email": "ana@example.com",
+            "cargo": "Analista",
+            "setor": "Vendas",
+        },
     )
     table_id, rows, row_ids = client.calls[0]
     assert table_id == "p.analytics_ops.chat_feedback"
     assert rows[0]["feedback_id"] == feedback_id
     assert rows[0]["rating"] == "resultado_errado"
+    assert rows[0]["nome"] == "Ana Silva"
+    assert rows[0]["email"] == "ana@example.com"
+    assert rows[0]["cargo"] == "Analista"
+    assert rows[0]["setor"] == "Vendas"
     assert row_ids == [feedback_id]
 
 
@@ -211,3 +245,28 @@ def test_ensure_tables_creates_interactions_view() -> None:
     assert "COALESCE(n.feedback_count, 0) AS feedback_count" in sql
     assert "n.feedback_id IS NOT NULL AS tem_feedback" in sql
     assert "n.rn = 1" in sql
+
+
+def test_ensure_tables_adds_profile_fields_to_existing_tables() -> None:
+    setup_client = FakeSetupClient()
+    setup_client.tables = {
+        "p.d.chat_events": type(
+            "ExistingTable",
+            (),
+            {"schema": [bigquery.SchemaField("event_id", "STRING")]},
+        )(),
+        "p.d.chat_feedback": type(
+            "ExistingTable",
+            (),
+            {"schema": [bigquery.SchemaField("feedback_id", "STRING")]},
+        )(),
+    }
+    store = FeedbackStore(settings=_settings(), dataset_id="d")
+    store._setup_client = setup_client
+
+    store.ensure_tables()
+
+    assert len(setup_client.updated_tables) == 2
+    for table in setup_client.updated_tables:
+        names = {field.name for field in table.schema}
+        assert {"nome", "email", "cargo", "setor"}.issubset(names)

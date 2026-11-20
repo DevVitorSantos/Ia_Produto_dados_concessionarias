@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from typing import Any
 
@@ -23,6 +23,10 @@ EVENT_SCHEMA = (
     bigquery.SchemaField("event_id", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("created_at", "TIMESTAMP", mode="REQUIRED"),
     bigquery.SchemaField("session_id", "STRING", mode="REQUIRED"),
+    bigquery.SchemaField("nome", "STRING"),
+    bigquery.SchemaField("email", "STRING"),
+    bigquery.SchemaField("cargo", "STRING"),
+    bigquery.SchemaField("setor", "STRING"),
     bigquery.SchemaField("question", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("question_hash", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("subject", "STRING", mode="REQUIRED"),
@@ -39,6 +43,10 @@ FEEDBACK_SCHEMA = (
     bigquery.SchemaField("event_id", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("created_at", "TIMESTAMP", mode="REQUIRED"),
     bigquery.SchemaField("session_id", "STRING", mode="REQUIRED"),
+    bigquery.SchemaField("nome", "STRING"),
+    bigquery.SchemaField("email", "STRING"),
+    bigquery.SchemaField("cargo", "STRING"),
+    bigquery.SchemaField("setor", "STRING"),
     bigquery.SchemaField("rating", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("comment", "STRING"),
 )
@@ -126,6 +134,10 @@ class FeedbackStore:
           e.event_id,
           e.created_at AS event_created_at,
           e.session_id,
+          e.nome,
+          e.email,
+          e.cargo,
+          e.setor,
           e.question,
           e.question_hash,
           e.subject,
@@ -222,15 +234,38 @@ class FeedbackStore:
     def ensure_tables(self) -> None:
         dataset = self.setup_client.dataset(self.dataset_id)
         self.setup_client.create_dataset(dataset, exists_ok=True)
-        self.setup_client.create_table(
-            bigquery.Table(dataset.table(EVENTS_TABLE), schema=list(EVENT_SCHEMA)),
-            exists_ok=True,
-        )
-        self.setup_client.create_table(
-            bigquery.Table(dataset.table(FEEDBACK_TABLE), schema=list(FEEDBACK_SCHEMA)),
-            exists_ok=True,
-        )
+        self._ensure_table_schema(dataset, EVENTS_TABLE, EVENT_SCHEMA)
+        self._ensure_table_schema(dataset, FEEDBACK_TABLE, FEEDBACK_SCHEMA)
         self.ensure_view()
+
+    def _ensure_table_schema(
+        self,
+        dataset: Any,
+        table_name: str,
+        schema: tuple[Any, ...],
+    ) -> None:
+        table_id = f"{self.settings.project_id}.{self.dataset_id}.{table_name}"
+        if not hasattr(self.setup_client, "get_table"):
+            self.setup_client.create_table(
+                bigquery.Table(dataset.table(table_name), schema=list(schema)),
+                exists_ok=True,
+            )
+            return
+
+        try:
+            table = self.setup_client.get_table(table_id)
+        except NotFound:
+            self.setup_client.create_table(
+                bigquery.Table(dataset.table(table_name), schema=list(schema)),
+                exists_ok=True,
+            )
+            return
+
+        existing_names = {field.name for field in table.schema}
+        missing_fields = [field for field in schema if field.name not in existing_names]
+        if missing_fields:
+            table.schema = [*table.schema, *missing_fields]
+            self.setup_client.update_table(table, ["schema"])
 
     def save_event(
         self,
@@ -245,13 +280,19 @@ class FeedbackStore:
         repeat_count: int,
         status: str,
         model: str,
+        user_profile: Mapping[str, Any] | None = None,
         event_id: str | None = None,
     ) -> str:
         resolved_event_id = event_id or str(uuid.uuid4())
+        profile = user_profile or {}
         row = {
             "event_id": resolved_event_id,
             "created_at": _now(),
             "session_id": session_id,
+            "nome": profile.get("nome") or None,
+            "email": profile.get("email") or None,
+            "cargo": profile.get("cargo") or None,
+            "setor": profile.get("setor") or None,
             "question": question,
             "question_hash": question_hash,
             "subject": subject,
@@ -278,15 +319,21 @@ class FeedbackStore:
         session_id: str,
         rating: str,
         comment: str = "",
+        user_profile: Mapping[str, Any] | None = None,
     ) -> str:
         if rating not in VALID_RATINGS:
             raise FeedbackStoreError(f"Nota inválida: {rating}")
         feedback_id = str(uuid.uuid4())
+        profile = user_profile or {}
         row = {
             "feedback_id": feedback_id,
             "event_id": event_id,
             "created_at": _now(),
             "session_id": session_id,
+            "nome": profile.get("nome") or None,
+            "email": profile.get("email") or None,
+            "cargo": profile.get("cargo") or None,
+            "setor": profile.get("setor") or None,
             "rating": rating,
             "comment": comment or None,
         }
