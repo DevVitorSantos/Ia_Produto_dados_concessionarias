@@ -12,7 +12,7 @@ from agent.tools import ToolExecutor, tool_schemas
 from config import get_secret
 from services.response_service import RESPONSE_SERVICE, AssistantAnswer
 
-DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_MODEL = "gpt-6-luna"
 MAX_TOOL_ROUNDS = 6
 
 

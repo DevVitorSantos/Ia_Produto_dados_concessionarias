@@ -29,7 +29,7 @@ export GCP_PROJECT_ID="projeto-dev-410722"
 export GCP_DATASET="gold_clau"
 export GCP_LOCATION="US"
 export OPENAI_API_KEY="sua-chave-rotacionada"
-export OPENAI_MODEL="gpt-4.1-mini"
+export OPENAI_MODEL="gpt-6-luna"
 ```
 
 Em produção, copie `.streamlit/secrets.toml.example` para `.streamlit/secrets.toml` e preencha `GOOGLE_APPLICATION_CREDENTIALS_JSON`. Nunca commite credenciais.

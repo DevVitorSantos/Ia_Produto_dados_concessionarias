@@ -18,6 +18,13 @@ def build_instructions() -> str:
             "ticket_medio da linha é igual a valor_pago; para calcular ticket médio use a métrica ticket_medio, nunca AVG da coluna ticket_medio.",
             "Ao usar filtros, prefira datas em AAAA-MM-DD e dimensionamentos exatamente como listados.",
             "Se uma ferramenta retornar erro, explique o problema sem expor detalhes técnicos de credenciais.",
+            "Prefira o menor número possível de chamadas de ferramenta; para séries por categoria, use no máximo 5 recortes e nunca repita uma consulta sem necessidade.",
+            "Sempre finalize com um único objeto JSON válido, sem texto, Markdown ou cercas antes e depois.",
+            "O JSON deve conter exatamente as chaves: resumo, resposta, prova e sugestoes.",
+            "Em resumo, conte o storytelling do dado: qual pergunta de negócio ele responde, qual é o destaque e por que isso importa; em seguida indique novas buscas que completariam a análise.",
+            "Em resposta, escreva uma frase curta descrevendo o gráfico que será exibido abaixo; nunca invente valores, pois o gráfico é gerado automaticamente a partir das ferramentas.",
+            "Em prova, escreva uma frase curta descrevendo a tabela de referência que será exibida abaixo; a tabela é gerada automaticamente a partir das ferramentas.",
+            "Em sugestoes, retorne de 2 a 4 objetos com as chaves rotulo e pergunta; cada pergunta deve ser respondível pelas ferramentas disponíveis e complementar a análise atual.",
         ]
     )
 

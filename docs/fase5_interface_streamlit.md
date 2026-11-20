@@ -30,7 +30,7 @@ Antes de usar o Chat IA, configure localmente:
 
 ```powershell
 $env:OPENAI_API_KEY = "sua-chave-rotacionada"
-$env:OPENAI_MODEL = "gpt-4.1-mini"
+$env:OPENAI_MODEL = "gpt-6-luna"
 ```
 
 A página de Indicadores usa a credencial BigQuery já prevista nas Fases 1 e 2.
@@ -38,7 +38,14 @@ A página de Indicadores usa a credencial BigQuery já prevista nas Fases 1 e 2.
 ## Experiência implementada
 
 - chat com histórico durante a sessão;
-- sugestões de perguntas;
+- resposta organizada nas seções `Resumo`, `Resposta`, `Prova` e `Sugestões`;
+- storytelling no resumo, com sugestões de buscas complementares;
+- gráfico na seção `Resposta`, com cores, rótulos de dados e labels de eixo;
+- múltiplas séries temporais filtradas são combinadas em um único gráfico, com o recorte identificado na legenda;
+- até 3 tabelas na seção `Prova`, com aviso quando houver mais resultados disponíveis;
+- tabela de referência sempre visível na seção `Prova`;
+- botões de sugestão que disparam uma nova busca ao serem clicados, inclusive no histórico;
+- sugestões iniciais na sidebar;
 - cards com as métricas oficiais;
 - gráficos Plotly para evolução mensal, ranking e comparação de períodos;
 - tabelas com download CSV;
@@ -54,7 +61,7 @@ A página de Indicadores usa a credencial BigQuery já prevista nas Fases 1 e 2.
 
 ## Validação
 
-- testes automatizados do projeto: 37 aprovados após o módulo de rastreamento de qualidade;
+- testes automatizados do projeto: 46 aprovados após o formato estruturado de resposta e o rastreamento de qualidade;
 - `compileall` e `git diff --check` executados ao final;
 - validação local no navegador: Home, Indicadores, Chat IA e Histórico renderizaram sem erros de console;
 - Indicadores carregou KPIs reais do BigQuery: R$ 3.444.157.639,69, 7.720 vendas e R$ 446.134,41 de ticket médio;

@@ -37,6 +37,17 @@ def _json_safe(value: Any) -> Any:
     return value
 
 
+def _filter_summary(filters: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    return [
+        {
+            "dimensao": item.get("dimension"),
+            "operador": item.get("operator"),
+            "valor": item.get("value"),
+        }
+        for item in filters or []
+    ]
+
+
 def _parse_date(value: str | None, field: str) -> date | None:
     if value in (None, ""):
         return None
@@ -175,6 +186,7 @@ class AnalyticsQueries:
                 "valor": value,
                 "unidade": definition.get("unit"),
                 "periodo": {"inicio": start_date, "fim": end_date},
+                "filtros": _filter_summary(filters),
             }
         )
 
@@ -205,6 +217,7 @@ class AnalyticsQueries:
                 "label": definition.get("label", metric),
                 "dimensao": dimension,
                 "linhas": rows,
+                "filtros": _filter_summary(filters),
             }
         )
 
@@ -233,6 +246,7 @@ class AnalyticsQueries:
                 "periodo_anterior": {"inicio": previous_start, "fim": previous_end, "valor": previous},
                 "variacao_absoluta": delta,
                 "variacao_percentual": percentage,
+                "filtros": _filter_summary(filters),
             }
         )
 
@@ -260,6 +274,7 @@ class AnalyticsQueries:
                 "label": definition.get("label", metric),
                 "granularidade": granularity,
                 "linhas": rows,
+                "filtros": _filter_summary(filters),
             }
         )
 
@@ -284,4 +299,10 @@ class AnalyticsQueries:
             parameters=parameters,
             max_rows=limit,
         )
-        return _json_safe({"linhas": rows, "quantidade": len(rows)})
+        return _json_safe(
+            {
+                "linhas": rows,
+                "quantidade": len(rows),
+                "filtros": _filter_summary(filters),
+            }
+        )

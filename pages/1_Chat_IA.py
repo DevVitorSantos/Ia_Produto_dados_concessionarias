@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from typing import Any
 
 import streamlit as st
 
@@ -9,7 +10,7 @@ from config import get_secret
 from services.feedback_store import FeedbackStore, FeedbackStoreError
 from services.openai_service import DEFAULT_MODEL, OpenAIService
 from services.search_classifier import classify_subject, question_hash, subject_hash
-from ui.components import render_tool_results
+from ui.components import render_suggestions, render_tool_results
 from ui.state import (
     FEEDBACK_KEY,
     PENDING_KEY,
@@ -42,6 +43,10 @@ RATINGS = (
 )
 
 
+def _apply_suggestion(question: str) -> None:
+    st.session_state[PENDING_KEY] = question
+
+
 def _render_feedback(event_id: str) -> None:
     if not event_id:
         return
@@ -67,6 +72,52 @@ def _render_feedback(event_id: str) -> None:
                 st.warning(f"Não foi possível registrar a nota: {exc}")
     if current:
         st.caption(f"Nota registrada: {dict(RATINGS).get(current, current)}.")
+
+
+def _render_answer(answer: dict[str, Any], *, key_prefix: str) -> None:
+    sections = answer.get("secoes") or {}
+    resumo = str(sections.get("resumo") or answer.get("resposta", "")).strip()
+    resposta = str(sections.get("resposta", "")).strip()
+    prova = str(sections.get("prova", "")).strip()
+
+    for warning in answer.get("avisos", []):
+        st.warning(warning)
+
+    st.markdown("### Resumo")
+    st.markdown(resumo or "Consulta concluída.")
+
+    st.markdown("### Resposta")
+    if resposta:
+        st.caption(resposta)
+    render_tool_results(
+        answer.get("resultados"),
+        key_prefix=f"{key_prefix}-resposta",
+        show_charts=True,
+        show_tables=False,
+        show_details=False,
+        max_charts=3,
+    )
+
+    st.markdown("### Prova")
+    if prova:
+        st.caption(prova)
+    render_tool_results(
+        answer.get("resultados"),
+        key_prefix=f"{key_prefix}-prova",
+        show_charts=False,
+        show_tables=True,
+        show_details=True,
+        table_expanded=True,
+        max_tables=3,
+    )
+
+    st.markdown("### Sugestões")
+    render_suggestions(
+        sections.get("sugestoes") or answer.get("sugestoes"),
+        key_prefix=key_prefix,
+        on_select=_apply_suggestion,
+    )
+    _render_feedback(str(answer.get("event_id", "")))
 
 
 def _save_event(
@@ -96,7 +147,7 @@ def _save_event(
 
 
 with st.sidebar:
-    st.header("Sugestões")
+    st.header("Sugestões iniciais")
     columns = st.columns(1)
     for suggestion in SUGGESTIONS:
         if st.button(suggestion, key=f"suggestion_{suggestion}", width="stretch"):
@@ -111,13 +162,10 @@ for message_index, message in enumerate(st.session_state["chat_messages"]):
         st.markdown(message["content"])
         answer = message.get("answer")
         if answer:
-            for warning in answer.get("avisos", []):
-                st.warning(warning)
-            render_tool_results(
-                answer.get("resultados"),
+            _render_answer(
+                answer,
                 key_prefix=f"chat-history-{message_index}-{answer.get('event_id', 'legacy')}",
             )
-            _render_feedback(str(answer.get("event_id", "")))
 
 prompt = st.chat_input("Digite sua pergunta sobre os dados de vendas...")
 if not prompt and st.session_state.get(PENDING_KEY):
@@ -165,11 +213,5 @@ if prompt:
         st.warning(f"Resposta gerada, mas o evento não foi registrado: {exc}")
 
     with st.chat_message("assistant"):
-        st.markdown(answer.text)
-        for warning in answer.avisos:
-            st.warning(warning)
-        render_tool_results(
-            answer.tool_results, key_prefix=f"chat-answer-{answer.event_id}"
-        )
-        _render_feedback(answer.event_id)
+        _render_answer(answer.to_dict(), key_prefix=f"chat-answer-{answer.event_id}")
     record_message("assistant", answer.text, answer)

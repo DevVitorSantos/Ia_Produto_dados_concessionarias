@@ -40,10 +40,30 @@ Defina localmente, sem colar a chave no chat:
 
 ```powershell
 $env:OPENAI_API_KEY = "sua-chave-nova"
-$env:OPENAI_MODEL = "gpt-4.1-mini"
+$env:OPENAI_MODEL = "gpt-6-luna"
 ```
 
 Ou preencha `.streamlit/secrets.toml`, que já está protegido pelo `.gitignore`, usando `.streamlit/secrets.toml.example` como modelo.
+
+## Formato padrão da resposta
+
+O agente deve encerrar toda resposta com um único objeto JSON válido, sem Markdown, com esta estrutura:
+
+```json
+{
+  "resumo": "Storytelling do dado: qual pergunta de negócio ele responde, o destaque e por que isso importa.",
+  "resposta": "Frase curta descrevendo o gráfico gerado automaticamente a partir das ferramentas.",
+  "prova": "Frase curta descrevendo a tabela de referência gerada automaticamente a partir das ferramentas.",
+  "sugestoes": [
+    {
+      "rotulo": "Texto do botão",
+      "pergunta": "Pergunta completa que dispara uma nova busca ao ser clicada."
+    }
+  ]
+}
+```
+
+O serviço aceita o JSON com ou sem cercas de código e mantém compatibilidade com respostas antigas em texto simples. Quando o modelo não fornece sugestões, o `ResponseService` cria sugestões padrão compatíveis com as ferramentas disponíveis.
 
 ## Testes
 

@@ -89,6 +89,28 @@ def test_instructions_contain_critical_business_rules() -> None:
     assert "2026-07-02" in INSTRUCTIONS
     assert "Nunca invente números" in INSTRUCTIONS
     assert "frações com sinal" in INSTRUCTIONS
+    assert "sugestoes" in INSTRUCTIONS
+    assert "objeto JSON válido" in INSTRUCTIONS
+    assert "menor número possível de chamadas" in INSTRUCTIONS
+
+
+def test_openai_service_parses_structured_sections_and_suggestions() -> None:
+    payload = (
+        '{"resumo":"O faturamento cresceu e concentra receita no Sul.",'
+        '"resposta":"Gráfico de evolução mensal com destaques.",'
+        '"prova":"Tabela com os valores usados no gráfico.",'
+        '"sugestoes":[{"rotulo":"Ver ranking","pergunta":"Quais foram as 10 concessionárias com maior faturamento?"}]}'
+    )
+    client = FakeClient([_response(FakeItem(type="message", content=[], id="msg_1"), text=payload)])
+    service = OpenAIService(tool_executor=FakeExecutor("{}"), client=client, model="test-model")
+
+    answer = service.ask("Como o faturamento evoluiu?")
+
+    assert answer.text == "O faturamento cresceu e concentra receita no Sul."
+    assert answer.secoes.resposta == "Gráfico de evolução mensal com destaques."
+    assert answer.secoes.prova == "Tabela com os valores usados no gráfico."
+    assert answer.secoes.sugestoes[0]["rotulo"] == "Ver ranking"
+    assert answer.to_dict()["secoes"]["sugestoes"] == answer.secoes.sugestoes
 
 
 def test_openai_service_runs_function_call_until_final_answer() -> None:
@@ -115,6 +137,8 @@ def test_openai_service_runs_function_call_until_final_answer() -> None:
     assert answer.to_dict()["event_id"] == answer.event_id
     assert answer.tools_used == ["get_kpi"]
     assert answer.avisos
+    assert answer.secoes.resumo == "Faturamento: R$ 100,00."
+    assert answer.secoes.sugestoes
     assert answer.tool_results[0]["ferramenta"] == "get_kpi"
     assert answer.tool_results[0]["valor"] == 100.0
     assert executor.calls == [("get_kpi", {"metric": "faturamento_total"})]
@@ -149,6 +173,9 @@ def test_analytics_builds_parameterized_query() -> None:
     )
 
     assert result["valor"] == 100
+    assert result["filtros"] == [
+        {"dimensao": "vendedor", "operador": "=", "valor": "João"}
+    ]
     assert "data >= @start_date" in fake_service.sql
     assert "vendedor = @f0" in fake_service.sql
     parameters = {item.name: item.value for item in fake_service.parameters}

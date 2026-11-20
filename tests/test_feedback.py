@@ -111,7 +111,7 @@ def test_save_event_uses_events_table_and_generated_id() -> None:
         response_ms=1200,
         repeat_count=2,
         status="sucesso",
-        model="gpt-4.1-mini",
+        model="gpt-6-luna",
     )
 
     table_id, rows, row_ids = client.calls[0]
