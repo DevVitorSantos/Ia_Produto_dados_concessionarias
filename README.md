@@ -1,7 +1,7 @@
 # AI Analytics Assistant — Concessionárias
 
 MVP de assistente analítico em Streamlit, com OpenAI Responses API, Function Calling e consultas somente leitura à camada Gold do BigQuery.
-
+<a href="https://iaapputodadosconcessionarias-gt8inzgcpgtmfabphmj6sj.streamlit.app/Chat_IA"> Link da Ferramenta </a>
 ## Status
 
 - Fase 1 concluída: fonte de dados analisada e documentada.
