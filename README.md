@@ -16,7 +16,7 @@ MVP de assistente analítico em Streamlit, com OpenAI Responses API, Function Ca
 
 Pipeline ELT no ecossistema Google Cloud que transforma dados brutos de vendas de uma rede de concessionárias em um modelo estrela na camada gold, alimentando 5 dashboards estratégicos no Looker Studio.
 
-![Produto de Dados](img/infografico02.png)
+![Produto de Dados](docs/infografico02.png)
 ---
 
 ## Arquitetura: Medalhão (Bronze → Silver → Gold)
