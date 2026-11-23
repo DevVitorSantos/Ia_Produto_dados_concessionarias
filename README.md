@@ -12,12 +12,189 @@ MVP de assistente analítico em Streamlit, com OpenAI Responses API, Function Ca
 - Rastreamento de qualidade implementado: eventos de busca, notas do usuário e análise de repetição no BigQuery.
 - Próxima: Fase 6 — GitHub, Secrets e deploy no Streamlit Community Cloud.
 
-## Instalação local
+## Produto de dados para Concessionárias
 
-```bash
-python -m venv .venv
-.venv/Scripts/python -m pip install -r requirements.txt
+Pipeline ELT no ecossistema Google Cloud que transforma dados brutos de vendas de uma rede de concessionárias em um modelo estrela na camada gold, alimentando 5 dashboards estratégicos no Looker Studio.
+
+![Produto de Dados](img/infografico02.png)
+---
+
+## Arquitetura: Medalhão (Bronze → Silver → Gold)
+
 ```
+
+┌────────────────────────────────────────────────────────────────────┐
+│                       FONTES DE DADOS                               │
+│                                                                    │
+│  Clientes, vendas, veículos, vendedores, concessionárias,          │
+│  cidades, estados, customers e outras fontes.                      │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                       EXTRAÇÃO EM PYTHON                            │
+│                                                                    │
+│  Scripts Python responsáveis pela ingestão dos dados das fontes   │
+│  e carregamento no Google BigQuery.                                │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                          BRONZE (Raw)                               │
+│                                                                    │
+│  8 tabelas brutas:                                                 │
+│  clientes, vendas, veiculos, vendedores,                            │
+│  concessionarias, cidades, estados, customers                      │
+│                                                                    │
+│  Dados como ingeridos, preservando a estrutura original,           │
+│  sem tratamento ou transformação analítica.                       │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                               ▼
+              ┌────────────────────────────────┐
+              │          DATAFORM — ELT        │
+              │                                │
+              │  Limpeza, casts, JOINs,        │
+              │  enriquecimento e cálculos.    │
+              └────────────────┬───────────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                       SILVER (Tratado)                              │
+│                                                                    │
+│  5 dimensões:                                                      │
+│  dim_clientes, dim_veiculos, dim_vendedores,                       │
+│  dim_concessionarias, dim_calendario                               │
+│                                                                    │
+│  2 fatos:                                                          │
+│  fato_vendas (limpa), fato_vendas_enriquecida (wide)               │
+│                                                                    │
+│  Métricas calculadas:                                              │
+│  desconto, faixa_preco, categoria_desconto, ticket, percentuais.   │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                               ▼
+              ┌────────────────────────────────┐
+              │          DATAFORM — ELT        │
+              │                                │
+              │  Renomeação, padronização,     │
+              │  organização e estruturação   │
+              │  do modelo dimensional.        │
+              └────────────────┬───────────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                    GOLD (Modelo Estrela)                            │
+│                                                                    │
+│                    ┌──────────┐                                    │
+│                    │dim_tempo │                                    │
+│                    └────┬─────┘                                    │
+│                         │                                          │
+│   ┌───────────┐         │         ┌───────────┐                    │
+│   │dim_cliente│─────────┤─────────│dim_veiculo│                    │
+│   └───────────┘         │         └───────────┘                    │
+│                         │                                          │
+│                    ┌────┴─────┐                                    │
+│                    │fato_vendas│                                   │
+│                    └────┬─────┘                                    │
+│                         │                                          │
+│   ┌────────────┐        │        ┌──────────────────┐              │
+│   │dim_vendedor│────────┤────────│dim_concessionaria│              │
+│   └────────────┘        │        └──────────────────┘              │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ vw_fato_completa (VIEW)                                      │  │
+│  │ Consulta única com os JOINs entre fatos e dimensões,         │  │
+│  │ preparada para consumo analítico.                            │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                  ┌────────────┴────────────┐
+                  │                         │
+                  ▼                         ▼
+┌──────────────────────────────┐  ┌──────────────────────────────────┐
+│       PRODUTO DE DADOS 1     │  │         PRODUTO DE DADOS 2       │
+│                              │  │                                  │
+│       LOOKER STUDIO          │  │       ASSISTENTE DE IA           │
+│                              │  │       STREAMLIT                  │
+│  5 dashboards                │  │                                  │
+│  Cross-filtering             │  │  Chatbot analítico conectado     │
+│  Indicadores estratégicos    │  │  aos dados reais do BigQuery.    │
+│  Relatórios visuais          │  │                                  │
+│  Análise de performance      │  │  ┌────────────────────────────┐  │
+│                              │  │  │        OPENAI API          │  │
+│                              │  │  │ Interpretação de perguntas │  │
+│                              │  │  │ e geração de insights.     │  │
+│                              │  │  └─────────────┬──────────────┘  │
+│                              │  │                │                 │
+│                              │  │                ▼                 │
+│                              │  │  ┌────────────────────────────┐  │
+│                              │  │  │       FUNCTION CALLING     │  │
+│                              │  │  │ Acionamento de ferramentas │  │
+│                              │  │  │ analíticas controladas.    │  │
+│                              │  │  └─────────────┬──────────────┘  │
+│                              │  │                │                 │
+│                              │  │                ▼                 │
+│                              │  │  ┌────────────────────────────┐  │
+│                              │  │  │      CAMADA SEMÂNTICA      │  │
+│                              │  │  │ Métricas, dimensões, regras│  │
+│                              │  │  │ de negócio e contexto.     │  │
+│                              │  │  └─────────────┬──────────────┘  │
+│                              │  │                │                 │
+│                              │  │                ▼                 │
+│                              │  │  ┌────────────────────────────┐  │
+│                              │  │  │       BIGQUERY — GOLD      │  │
+│                              │  │  │ Consultas aos dados        │  │
+│                              │  │  │ analíticos autorizados.    │  │
+│                              │  │  └────────────────────────────┘  │
+└──────────────────────────────┘  └──────────────────────────────────┘
+                  │                         │
+                  └────────────┬────────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                  CI/CD E TESTES AUTOMATIZADOS                       │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ GITHUB                                                       │  │
+│  │ Versionamento e controle do código-fonte.                   │  │
+│  └──────────────────────────────┬───────────────────────────────┘  │
+│                                 │                                  │
+│                                 ▼                                  │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ GITHUB ACTIONS (CI/CD)                                       │  │
+│  │ Build, integração, execução de testes e automação do deploy. │  │
+│  └──────────────────────────────┬───────────────────────────────┘  │
+│                                 │                                  │
+│                                 ▼                                  │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ TESTES AUTOMATIZADOS                                         │  │
+│  │ Validação de consultas, transformações, métricas, regras     │  │
+│  │ de negócio e respostas da aplicação.                        │  │
+│  └──────────────────────────────┬───────────────────────────────┘  │
+│                                 │                                  │
+│                                 ▼                                  │
+│  ┌──────────────────────────────────────────────────────────────┐  │
+│  │ DEPLOY — STREAMLIT COMMUNITY CLOUD                           │  │
+│  │ Publicação e atualização contínua da aplicação de IA.        │  │
+│  └──────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                               ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                  FEEDBACK E MELHORIA CONTÍNUA                       │
+│                                                                    │
+│  Novas regras de negócio, métricas, ajustes nas transformações,   │
+│  correções e melhorias identificadas nos produtos de dados.       │
+│                                                                    │
+│  Retroalimentação da ELT para evolução da qualidade dos dados,    │
+│  dos modelos analíticos e dos produtos disponibilizados.          │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+                               └──────────────► DATAFORM — ELT
+                                                (novo ciclo)
+```
+
 
 ## Configuração
 
